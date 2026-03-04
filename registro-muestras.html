@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro de Muestras - SIIL | SENER</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/base-theme.css" />
+    <link rel="stylesheet" href="css/shared-header.css" />
+    <link rel="stylesheet" href="css/shared-breadcrumbs.css" />
+    <link rel="stylesheet" href="css/shared-bottom-nav.css" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#9B2247",
+                        accent: "#A57F2C",
+                        "background-light": "#F8F9FA"
+                    },
+                    fontFamily: {
+                        display: ["Noto Sans", "sans-serif"]
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: "Noto Sans", sans-serif;
+            min-height: 100vh;
+            background-color: #F8F9FA;
+            padding-bottom: 6rem;
+        }
+
+        .registro-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1F2937;
+            margin-bottom: 0.75rem;
+        }
+
+        .page-subtitle {
+            color: #6B7280;
+            font-size: 1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .registro-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .registro-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .registro-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(155, 34, 71, 0.15);
+            border-color: #9B2247;
+        }
+
+        .card-image {
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .registro-card:hover .card-image img {
+            transform: scale(1.05);
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: linear-gradient(135deg, #9B2247 0%, #7f1c3a 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(155, 34, 71, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-description {
+            font-size: 0.875rem;
+            color: #6B7280;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            flex: 1;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #9B2247;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #F3F4F6;
+        }
+
+        .card-button {
+            width: 100%;
+            background: #9B2247;
+            color: white;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .card-button:hover:not(:disabled) {
+            background: #7f1c3a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(155, 34, 71, 0.3);
+        }
+
+        .card-button:disabled {
+            background: #D1D5DB;
+            cursor: not-allowed;
+        }
+
+        .info-banner {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            border-left: 4px solid #9B2247;
+        }
+
+        .info-banner-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-banner-text {
+            font-size: 0.875rem;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+
+        .workflow-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+
+        .workflow-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .workflow-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #9B2247 0%, #7f1c3a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0 auto 1rem;
+            box-shadow: 0 4px 12px rgba(155, 34, 71, 0.3);
+        }
+
+        .step-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-description {
+            font-size: 0.75rem;
+            color: #6B7280;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .registro-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <site-header></site-header>
+    <site-breadcrumbs></site-breadcrumbs>
+
+    <main class="registro-container">
+        <div class="page-header">
+            <h1 class="page-title">Registro de Muestras y Análisis</h1>
+            <p class="page-subtitle">
+                Seleccione el tipo de registro que desea realizar para dar seguimiento completo 
+                a los procesos de campo y laboratorio del Sistema Integral de Información del Litio.
+            </p>
+        </div>
+
+        <!-- Registro Cards Grid -->
+        <div class="registro-grid">
+            <!-- Registro de Barreno -->
+            <article class="registro-card">
+                <div class="card-image">
+                    <img src="img/barreno.png" alt="Registro de Barreno" onerror="this.style.display='none';">
+                    <div class="card-badge">
+                        <span>1</span>
+                        <span>Paso Inicial</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">Registro de Barreno</h2>
+                    <p class="card-description">
+                        Documentación detallada de la perforación, profundidad alcanzada y características 
+                        de la estratigrafía del terreno. Incluye registro de intervalos y coordenadas geográficas.
+                    </p>
+                    <div class="card-meta">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Operación de Campo</span>
+                    </div>
+                    <button class="card-button">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        Iniciar Registro
+                    </button>
+                </div>
+            </article>
+
+            <!-- Registro de Muestra -->
+            <article class="registro-card">
+                <div class="card-image">
+                    <img src="img/mujer.png" alt="Registro de Muestra" onerror="this.style.display='none';">
+                    <div class="card-badge">
+                        <span>2</span>
+                        <span>Recolección</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">Registro de Muestra</h2>
+                    <p class="card-description">
+                        Captura de datos físicos, etiquetado y ubicación geoespacial exacta de la muestra 
+                        recolectada. Sistema de trazabilidad completo desde campo hasta laboratorio.
+                    </p>
+                    <div class="card-meta">
+                        <i class="fa-solid fa-vial"></i>
+                        <span>Muestreo y Etiquetado</span>
+                    </div>
+                    <button class="card-button">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        Iniciar Registro
+                    </button>
+                </div>
+            </article>
+
+            <!-- Análisis de Campo -->
+            <article class="registro-card">
+                <div class="card-image">
+                    <img src="img/analisis_campo.png" alt="Análisis de Campo" onerror="this.style.display='none';">
+                    <div class="card-badge">
+                        <span>3</span>
+                        <span>Análisis In Situ</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">Análisis de Campo</h2>
+                    <p class="card-description">
+                        Resultados de pruebas rápidas realizadas in situ durante el proceso de muestreo. 
+                        Mediciones preliminares de pH, conductividad y otros parámetros físico-químicos.
+                    </p>
+                    <div class="card-meta">
+                        <i class="fa-solid fa-flask"></i>
+                        <span>Pruebas Rápidas</span>
+                    </div>
+                    <button class="card-button" disabled>
+                        <i class="fa-solid fa-clock"></i>
+                        Próximamente
+                    </button>
+                </div>
+            </article>
+
+            <!-- Análisis de Laboratorio -->
+            <article class="registro-card">
+                <div class="card-image">
+                    <img src="img/analisis_laboratorio.png" alt="Análisis de Laboratorio" onerror="this.style.display='none';">
+                    <div class="card-badge">
+                        <span>4</span>
+                        <span>Resultados Finales</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <h2 class="card-title">Análisis de Laboratorio</h2>
+                    <p class="card-description">
+                        Documentación técnica y resultados exhaustivos obtenidos en laboratorio especializado. 
+                        Incluye concentraciones de litio, elementos asociados y certificaciones oficiales.
+                    </p>
+                    <div class="card-meta">
+                        <i class="fa-solid fa-microscope"></i>
+                        <span>Análisis Completo</span>
+                    </div>
+                    <button class="card-button" disabled>
+                        <i class="fa-solid fa-clock"></i>
+                        Próximamente
+                    </button>
+                </div>
+            </article>
+        </div>
+
+        <!-- Workflow Section -->
+        <div class="workflow-section">
+            <h3 class="workflow-title">Flujo de Trabajo del Sistema</h3>
+            <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Perforación</div>
+                    <div class="step-description">
+                        Registro del barreno con datos de profundidad e intervalos
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Muestreo</div>
+                    <div class="step-description">
+                        Recolección y etiquetado de muestras en campo
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Análisis</div>
+                    <div class="step-description">
+                        Pruebas de campo y análisis de laboratorio
+                    </div>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Resultados</div>
+                    <div class="step-description">
+                        Generación de reportes y certificaciones
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="info-banner">
+            <div class="info-banner-title">
+                <i class="fa-solid fa-circle-info"></i>
+                Información Importante
+            </div>
+            <p class="info-banner-text">
+                Todos los registros quedan almacenados en el sistema con trazabilidad completa. 
+                Los datos capturados son validados automáticamente y pueden ser consultados en tiempo real 
+                desde el módulo de Resultados. Para soporte técnico o dudas sobre el proceso de registro, 
+                consulte la documentación o contacte al equipo de soporte.
+            </p>
+        </div>
+    </main>
+
+    <site-bottom-nav></site-bottom-nav>
+
+    <script src="js/preloader.js"></script>
+    <script src="js/shared-layout.js"></script>
+    <script src="js/shared-breadcrumbs.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+
+</html>

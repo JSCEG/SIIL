@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Resultados de Análisis - SIIL | SENER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/base-theme.css" />
+    <link rel="stylesheet" href="css/shared-header.css" />
+    <link rel="stylesheet" href="css/shared-breadcrumbs.css" />
+    <link rel="stylesheet" href="css/shared-bottom-nav.css" />
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#9B2247",
+                        accent: "#A57F2C",
+                        "background-light": "#F8F9FA"
+                    },
+                    fontFamily: {
+                        display: ["Noto Sans", "sans-serif"]
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: "Noto Sans", sans-serif;
+            min-height: 100vh;
+            background-color: #F8F9FA;
+            padding-bottom: 6rem;
+        }
+
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1F2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #6B7280;
+            font-size: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #9B2247;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(155, 34, 71, 0.15);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #9B2247 0%, #7f1c3a 100%);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1F2937;
+            line-height: 1;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stat-change.positive {
+            color: #10B981;
+        }
+
+        .stat-change.negative {
+            color: #EF4444;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1F2937;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: #F9FAFB;
+        }
+
+        .data-table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #F3F4F6;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .data-table tbody tr:hover {
+            background: #F9FAFB;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-info {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .activity-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid #F3F4F6;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            background: #F3F4F6;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9B2247;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-meta {
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9CA3AF;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body>
+    <site-header></site-header>
+    <site-breadcrumbs></site-breadcrumbs>
+
+    <main class="results-container">
+        <div class="page-header">
+            <h1 class="page-title">Resultados de Análisis</h1>
+            <p class="page-subtitle">Visualización de datos y métricas del Sistema Integral de Información del Litio</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-vial"></i>
+                </div>
+                <div class="stat-label">Muestras Analizadas</div>
+                <div class="stat-value">1,247</div>
+                <div class="stat-change positive">
+                    <i class="fa-solid fa-arrow-up"></i>
+                    <span>12% vs mes anterior</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-flask"></i>
+                </div>
+                <div class="stat-label">Análisis Pendientes</div>
+                <div class="stat-value">89</div>
+                <div class="stat-change negative">
+                    <i class="fa-solid fa-arrow-down"></i>
+                    <span>5% vs mes anterior</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div class="stat-label">Concentración Promedio</div>
+                <div class="stat-value">342 ppm</div>
+                <div class="stat-change positive">
+                    <i class="fa-solid fa-arrow-up"></i>
+                    <span>8% vs mes anterior</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <div class="stat-label">Sitios Activos</div>
+                <div class="stat-value">24</div>
+                <div class="stat-change positive">
+                    <i class="fa-solid fa-arrow-up"></i>
+                    <span>3 nuevos este mes</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Main Content -->
+            <div>
+                <!-- Recent Results Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-table"></i>
+                            Resultados Recientes
+                        </h2>
+                        <button class="text-primary hover:text-primary/80 text-sm font-semibold">
+                            Ver todos →
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID Muestra</th>
+                                        <th>Ubicación</th>
+                                        <th>Concentración</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>LIT-2024-001</strong></td>
+                                        <td>Sonora, Zona Norte</td>
+                                        <td><strong>425 ppm</strong></td>
+                                        <td><span class="badge badge-success">Completado</span></td>
+                                        <td>15 Feb 2024</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>LIT-2024-002</strong></td>
+                                        <td>Zacatecas, Zona Centro</td>
+                                        <td><strong>312 ppm</strong></td>
+                                        <td><span class="badge badge-success">Completado</span></td>
+                                        <td>14 Feb 2024</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>LIT-2024-003</strong></td>
+                                        <td>San Luis Potosí, Zona Este</td>
+                                        <td><strong>278 ppm</strong></td>
+                                        <td><span class="badge badge-warning">En Proceso</span></td>
+                                        <td>13 Feb 2024</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>LIT-2024-004</strong></td>
+                                        <td>Chihuahua, Zona Oeste</td>
+                                        <td><strong>389 ppm</strong></td>
+                                        <td><span class="badge badge-info">Revisión</span></td>
+                                        <td>12 Feb 2024</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>LIT-2024-005</strong></td>
+                                        <td>Durango, Zona Sur</td>
+                                        <td><strong>456 ppm</strong></td>
+                                        <td><span class="badge badge-success">Completado</span></td>
+                                        <td>11 Feb 2024</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-chart-area"></i>
+                            Tendencia de Concentración
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-placeholder">
+                            <div class="text-center">
+                                <i class="fa-solid fa-chart-line text-4xl mb-2"></i>
+                                <p>Gráfica de tendencias - Integración pendiente</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <!-- Activity Feed -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            Actividad Reciente
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <ul class="activity-list">
+                            <li class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Análisis completado</div>
+                                    <div class="activity-meta">Muestra LIT-2024-001 • Hace 2 horas</div>
+                                </div>
+                            </li>
+                            <li class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fa-solid fa-upload"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Nueva muestra registrada</div>
+                                    <div class="activity-meta">Muestra LIT-2024-006 • Hace 4 horas</div>
+                                </div>
+                            </li>
+                            <li class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Usuario agregado</div>
+                                    <div class="activity-meta">María González • Hace 1 día</div>
+                                </div>
+                            </li>
+                            <li class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fa-solid fa-file-export"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Reporte exportado</div>
+                                    <div class="activity-meta">Reporte mensual • Hace 2 días</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fa-solid fa-bolt"></i>
+                            Acciones Rápidas
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="flex flex-col gap-2">
+                            <button class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-plus"></i>
+                                Nueva Muestra
+                            </button>
+                            <button class="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-lg border-2 border-gray-200 transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-download"></i>
+                                Exportar Datos
+                            </button>
+                            <button class="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-lg border-2 border-gray-200 transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-chart-pie"></i>
+                                Ver Reportes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-bottom-nav></site-bottom-nav>
+
+    <script src="js/preloader.js"></script>
+    <script src="js/shared-layout.js"></script>
+    <script src="js/shared-breadcrumbs.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+
+</html>
