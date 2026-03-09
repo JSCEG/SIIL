@@ -138,7 +138,7 @@
         [STAGE_KEYS.borehole]: {
             title: 'Registro de barreno',
             description: 'Captura el contexto del barreno y deja listo el punto de partida para el resto del flujo.',
-            icon: 'fa-drill',
+            icon: 'fa-person-digging',
             image: 'img/analisis_laboratorio.png',
             imageFallback: 'fa-mountain-sun',
             href: 'registro-muestras.html',
@@ -232,7 +232,7 @@
             icon: 'fa-clipboard-list',
             image: '',
             imageFallback: 'fa-clipboard-check',
-            href: 'dashboard.html',
+            href: 'audit-log.html',
             cta: 'Ver bitacora',
             priority: 6,
             category: 'admin'
@@ -287,7 +287,7 @@
             { icon: 'fa-users-cog', label: 'Gestion de usuarios y cuentas', href: 'dashboard.html' },
             { icon: 'fa-key', label: 'Roles y accesos', href: 'dashboard.html' },
             { icon: 'fa-shield-halved', label: 'Politicas de seguridad', href: 'dashboard.html' },
-            { icon: 'fa-clipboard-list', label: 'Bitacora de acciones', href: 'dashboard.html' },
+            { icon: 'fa-clipboard-list', label: 'Bitacora de acciones', href: 'audit-log.html' },
             { icon: 'fa-envelope-open-text', label: 'Recuperacion y soporte de acceso', href: 'login.html' }
         ],
         coordinador: [
@@ -346,8 +346,7 @@
     function buildModules(role) {
         return getStageOrder(role)
             .map((key) => STAGE_CATALOG[key])
-            .filter(Boolean)
-            .sort((left, right) => right.priority - left.priority);
+            .filter(Boolean);
     }
 
     function renderHero(user, profile, modules) {
@@ -544,6 +543,14 @@
         init();
     });
 }());
+
+
+
+
+
+
+
+
 
 
 

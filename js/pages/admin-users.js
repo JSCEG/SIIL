@@ -1,5 +1,6 @@
 (function () {
     const ROLES = ['admin', 'coordinador', 'geologo', 'operador_campo', 'tecnico_lab'];
+    const USERS_PAGE_SIZE = 8;
 
     const FEATURE_LABELS = {
         map_view: 'Mapa',
@@ -16,12 +17,14 @@
             this.state = {
                 users: [],
                 roleFeatures: {},
-                editingUserId: null
+                editingUserId: null,
+                currentUsersPage: 1
             };
 
             this.elements = {
                 tableBody: document.getElementById('usersTableBody'),
                 emptyState: document.getElementById('usersEmptyState'),
+                pagination: document.getElementById('usersPagination'),
                 form: document.getElementById('userForm'),
                 message: document.getElementById('adminMessage'),
                 count: document.getElementById('usersCount'),
@@ -69,7 +72,6 @@
             const session = window.AuthService.readSession();
             const config = window.AuthService.getConfig();
             return {
-                session,
                 config,
                 headers: {
                     apikey: config.anonKey,
@@ -123,6 +125,7 @@
 
                 this.state.users = Array.isArray(users) ? users : [];
                 this.state.roleFeatures = this.groupFeatures(Array.isArray(features) ? features : []);
+                this.state.currentUsersPage = 1;
                 this.render();
                 this.setMessage('Administracion de cuentas lista.', 'success');
             } catch (error) {
@@ -144,6 +147,7 @@
         render() {
             this.renderCounters();
             this.renderTable();
+            this.renderPagination();
         }
 
         renderCounters() {
@@ -152,6 +156,23 @@
             this.elements.roleCount.textContent = String(new Set(this.state.users.map((user) => user.rol)).size);
             this.elements.activeCount.textContent = String(activeUsers);
             this.elements.securityCount.textContent = String(this.state.roleFeatures.admin?.length || 0);
+        }
+
+        getPaginatedUsers() {
+            const total = this.state.users.length;
+            const totalPages = Math.max(1, Math.ceil(total / USERS_PAGE_SIZE));
+            const currentPage = Math.min(this.state.currentUsersPage, totalPages);
+            const start = (currentPage - 1) * USERS_PAGE_SIZE;
+            const end = start + USERS_PAGE_SIZE;
+
+            return {
+                total,
+                totalPages,
+                currentPage,
+                start,
+                end,
+                rows: this.state.users.slice(start, end)
+            };
         }
 
         renderTable() {
@@ -163,8 +184,10 @@
                 return;
             }
 
+            const page = this.getPaginatedUsers();
+            this.state.currentUsersPage = page.currentPage;
             emptyState.style.display = 'none';
-            tableBody.innerHTML = this.state.users.map((user) => {
+            tableBody.innerHTML = page.rows.map((user) => {
                 const features = this.state.roleFeatures[user.rol] || [];
                 const featureBadges = features.length > 0
                     ? features.map((feature) => `<span class="feature-badge">${this.getFeatureLabel(feature)}</span>`).join('')
@@ -203,6 +226,47 @@
 
             tableBody.querySelectorAll('[data-action="reset"]').forEach((button) => {
                 button.addEventListener('click', () => this.sendRecovery(button.dataset.id));
+            });
+        }
+
+        renderPagination() {
+            const container = this.elements.pagination;
+            if (!container) {
+                return;
+            }
+
+            if (this.state.users.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const page = this.getPaginatedUsers();
+            const from = page.start + 1;
+            const to = Math.min(page.end, page.total);
+
+            container.innerHTML = `
+                <div class="table-pagination__info">Mostrando ${from}-${to} de ${page.total} cuentas</div>
+                <div class="table-pagination__actions">
+                    <button type="button" class="table-pagination__button" data-page-action="prev" ${page.currentPage === 1 ? 'disabled' : ''}>Anterior</button>
+                    <span class="table-pagination__page">Página ${page.currentPage} de ${page.totalPages}</span>
+                    <button type="button" class="table-pagination__button" data-page-action="next" ${page.currentPage === page.totalPages ? 'disabled' : ''}>Siguiente</button>
+                </div>
+            `;
+
+            container.querySelector('[data-page-action="prev"]')?.addEventListener('click', () => {
+                if (this.state.currentUsersPage > 1) {
+                    this.state.currentUsersPage -= 1;
+                    this.renderTable();
+                    this.renderPagination();
+                }
+            });
+
+            container.querySelector('[data-page-action="next"]')?.addEventListener('click', () => {
+                if (this.state.currentUsersPage < page.totalPages) {
+                    this.state.currentUsersPage += 1;
+                    this.renderTable();
+                    this.renderPagination();
+                }
             });
         }
 
@@ -269,7 +333,8 @@
                 const response = await this.callAdminFunction({
                     action: isEditing ? 'update' : 'create',
                     ...payload,
-                    redirectTo: this.getRecoveryRedirectUrl()
+                    redirectTo: this.getRecoveryRedirectUrl(),
+                    viewName: 'dashboard.html'
                 });
 
                 this.setMessage(
@@ -295,7 +360,8 @@
                     action: 'toggle',
                     id: userId,
                     activo: nextActiveState,
-                    redirectTo: nextActiveState ? this.getRecoveryRedirectUrl() : ''
+                    redirectTo: nextActiveState ? this.getRecoveryRedirectUrl() : '',
+                    viewName: 'dashboard.html'
                 });
 
                 this.setMessage(response.message || 'Estado de cuenta actualizado.', response.warning ? 'info' : 'success');
@@ -310,7 +376,8 @@
                 const response = await this.callAdminFunction({
                     action: 'reset_password',
                     id: userId,
-                    redirectTo: this.getRecoveryRedirectUrl()
+                    redirectTo: this.getRecoveryRedirectUrl(),
+                    viewName: 'dashboard.html'
                 });
 
                 this.setMessage(response.message || 'Correo de recuperacion generado.', 'success');

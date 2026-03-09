@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitácora de Acciones - SIIL | SENER</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/base-theme.css">
+    <link rel="stylesheet" href="css/shared-header.css">
+    <link rel="stylesheet" href="css/shared-breadcrumbs.css">
+    <link rel="stylesheet" href="css/shared-bottom-nav.css">
+    <link rel="stylesheet" href="css/dashboard-styles.css">
+</head>
+
+<body>
+    <site-header></site-header>
+    <site-breadcrumbs></site-breadcrumbs>
+
+    <main class="main-content admin-main" style="padding-bottom: 6rem;">
+        <div class="container admin-shell">
+            <section class="admin-hero">
+                <div>
+                    <p class="admin-kicker">Administración SIIL</p>
+                    <h1>Bitácora de acciones</h1>
+                    <p>Seguimiento de cambios administrativos sobre cuentas, accesos y movimientos relevantes del módulo de administración.</p>
+                </div>
+                <div class="admin-hero-actions">
+                    <a class="btn btn-secondary" href="dashboard.html">Volver a cuentas</a>
+                    <span id="auditMessage" class="admin-message info">Cargando bitácora...</span>
+                </div>
+            </section>
+
+            <section class="admin-panel admin-panel--audit">
+                <div class="panel-header panel-header--audit">
+                    <div>
+                        <h2>Eventos recientes</h2>
+                        <p>Aquí puede revisar quién hizo qué, cuándo lo hizo y qué cambió dentro de la administración.</p>
+                    </div>
+                    <span id="auditCount" class="admin-inline-count">0 eventos</span>
+                </div>
+
+                <div class="audit-toolbar">
+                    <select id="auditActionFilter" class="admin-input admin-input--compact">
+                        <option value="">Todas las acciones</option>
+                        <option value="create">Alta</option>
+                        <option value="update">Edición</option>
+                        <option value="activate">Activación</option>
+                        <option value="deactivate">Desactivación</option>
+                        <option value="reset_password">Recuperación</option>
+                    </select>
+                    <input id="auditUserFilter" class="admin-input admin-input--compact" type="text" placeholder="Buscar por usuario o correo">
+                    <input id="auditDateFilter" class="admin-input admin-input--compact" type="date">
+                    <button id="clearAuditFilters" type="button" class="btn btn-secondary btn-compact">Limpiar filtros</button>
+                </div>
+
+                <div id="auditEmptyState" class="empty-state" style="display:none;">
+                    No hay eventos de bitácora para mostrar con los filtros actuales.
+                </div>
+
+                <div class="table-wrap">
+                    <table class="admin-table admin-table--audit">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Usuario</th>
+                                <th>Acción</th>
+                                <th>Registro</th>
+                                <th>Cambio</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="auditPagination" class="table-pagination"></div>
+            </section>
+        </div>
+    </main>
+
+    <site-bottom-nav></site-bottom-nav>
+
+    <script src="config.js"></script>
+    <script src="js/shared/preloader.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/shared/shared-layout.js"></script>
+    <script src="js/shared/shared-breadcrumbs.js"></script>
+    <script src="js/shared/auth.js"></script>
+    <script src="js/pages/audit-log.js"></script>
+</body>
+
+</html>
+
+
+

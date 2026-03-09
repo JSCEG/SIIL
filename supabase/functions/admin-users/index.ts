@@ -11,6 +11,30 @@ const corsHeaders = {
 
 const ROLE_VALUES = new Set(['admin', 'coordinador', 'geologo', 'operador_campo', 'tecnico_lab']);
 const TEMP_PASSWORD_LENGTH = 18;
+const DEFAULT_VIEW_NAME = 'dashboard.html';
+const AUDIT_MODULE = 'user_accounts';
+
+type SupabaseClient = ReturnType<typeof createClient>;
+
+type CallerProfile = {
+  id: string;
+  rol: string;
+  activo: boolean;
+  nombre?: string | null;
+  correo?: string | null;
+  institucion?: string | null;
+};
+
+type AuditPayload = {
+  action: string;
+  entityId?: string | null;
+  entityLabel?: string | null;
+  beforeData?: Record<string, unknown> | null;
+  afterData?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
+  status?: 'success' | 'warning' | 'error';
+  viewName?: string;
+};
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -36,6 +60,53 @@ function normalizeProjects(projects: unknown) {
   return projects
     .map((item) => String(item).trim())
     .filter(Boolean);
+}
+
+function sanitizeProfileForAudit(profile: Record<string, unknown> | null | undefined) {
+  if (!profile) {
+    return null;
+  }
+
+  return {
+    id: profile.id ?? null,
+    correo: profile.correo ?? null,
+    nombre: profile.nombre ?? null,
+    rol: profile.rol ?? null,
+    institucion: profile.institucion ?? null,
+    proyectos: Array.isArray(profile.proyectos) ? profile.proyectos : [],
+    activo: profile.activo ?? null
+  };
+}
+
+async function insertAuditLog(
+  adminClient: SupabaseClient,
+  callerUser: { id: string; email?: string | null },
+  callerProfile: CallerProfile,
+  payload: AuditPayload
+) {
+  const actorName = callerProfile.nombre || callerUser.email || 'Usuario SIIL';
+
+  const { error } = await adminClient
+    .from('audit_log')
+    .insert({
+      user_id: callerUser.id,
+      user_name: actorName,
+      user_role: callerProfile.rol,
+      module: AUDIT_MODULE,
+      action: payload.action,
+      entity_type: 'usuario',
+      entity_id: payload.entityId || null,
+      entity_label: payload.entityLabel || null,
+      view_name: payload.viewName || DEFAULT_VIEW_NAME,
+      before_data: payload.beforeData || null,
+      after_data: payload.afterData || null,
+      status: payload.status || 'success',
+      metadata: payload.metadata || null
+    });
+
+  if (error) {
+    console.error('Audit log insert failed:', error.message);
+  }
 }
 
 async function getAdminContext(request: Request) {
@@ -81,19 +152,19 @@ async function getAdminContext(request: Request) {
 
   const { data: callerProfile, error: profileError } = await adminClient
     .from('usuarios')
-    .select('id, rol, activo')
+    .select('id, rol, activo, nombre, correo, institucion')
     .eq('id', user.id)
-    .maybeSingle();
+    .maybeSingle<CallerProfile>();
 
   if (profileError || !callerProfile || callerProfile.rol !== 'admin' || callerProfile.activo === false) {
     return { error: jsonResponse({ error: 'No tiene permisos para administrar cuentas.' }, 403) };
   }
 
-  return { adminClient, publicClient, callerUser: user };
+  return { adminClient, publicClient, callerUser: user, callerProfile };
 }
 
 async function sendRecoveryEmail(
-  publicClient: ReturnType<typeof createClient>,
+  publicClient: SupabaseClient,
   email: string,
   redirectTo: string
 ) {
@@ -105,8 +176,10 @@ async function sendRecoveryEmail(
 }
 
 async function createAccount(
-  adminClient: ReturnType<typeof createClient>,
-  publicClient: ReturnType<typeof createClient>,
+  adminClient: SupabaseClient,
+  publicClient: SupabaseClient,
+  callerUser: { id: string; email?: string | null },
+  callerProfile: CallerProfile,
   payload: Record<string, unknown>
 ) {
   const correo = String(payload.correo || '').trim().toLowerCase();
@@ -116,6 +189,7 @@ async function createAccount(
   const activo = payload.activo !== false;
   const proyectos = normalizeProjects(payload.proyectos);
   const redirectTo = String(payload.redirectTo || '').trim();
+  const viewName = String(payload.viewName || DEFAULT_VIEW_NAME).trim() || DEFAULT_VIEW_NAME;
 
   if (!correo || !nombre || !ROLE_VALUES.has(rol) || !redirectTo) {
     return jsonResponse({ error: 'Correo, nombre, rol valido y redirectTo son obligatorios.' }, 400);
@@ -157,24 +231,52 @@ async function createAccount(
     return jsonResponse({ error: profileError.message || 'No fue posible crear el perfil del usuario.' }, 400);
   }
 
+  let status: 'success' | 'warning' = 'success';
+  let message = 'Cuenta creada y correo de acceso enviado.';
+  let errorMessage = '';
+
   try {
     await sendRecoveryEmail(publicClient, correo, redirectTo);
   } catch (error) {
+    status = 'warning';
+    message = 'Cuenta creada, pero no fue posible enviar el correo de acceso.';
+    errorMessage = error instanceof Error ? error.message : 'No fue posible enviar el correo de acceso.';
+  }
+
+  await insertAuditLog(adminClient, callerUser, callerProfile, {
+    action: 'create',
+    entityId: profile.id,
+    entityLabel: `${profile.nombre} <${profile.correo}>`,
+    beforeData: null,
+    afterData: sanitizeProfileForAudit(profile),
+    status,
+    viewName,
+    metadata: {
+      recovery_email_sent: status === 'success'
+    }
+  });
+
+  if (status === 'warning') {
     return jsonResponse({
       user: profile,
       warning: true,
-      message: 'Cuenta creada, pero no fue posible enviar el correo de acceso.',
-      error: error instanceof Error ? error.message : 'No fue posible enviar el correo de acceso.'
+      message,
+      error: errorMessage
     }, 207);
   }
 
   return jsonResponse({
     user: profile,
-    message: 'Cuenta creada y correo de acceso enviado.'
+    message
   });
 }
 
-async function updateAccount(adminClient: ReturnType<typeof createClient>, payload: Record<string, unknown>) {
+async function updateAccount(
+  adminClient: SupabaseClient,
+  callerUser: { id: string; email?: string | null },
+  callerProfile: CallerProfile,
+  payload: Record<string, unknown>
+) {
   const id = String(payload.id || '').trim();
   const correo = String(payload.correo || '').trim().toLowerCase();
   const nombre = String(payload.nombre || '').trim();
@@ -182,10 +284,17 @@ async function updateAccount(adminClient: ReturnType<typeof createClient>, paylo
   const institucion = String(payload.institucion || '').trim();
   const activo = payload.activo !== false;
   const proyectos = normalizeProjects(payload.proyectos);
+  const viewName = String(payload.viewName || DEFAULT_VIEW_NAME).trim() || DEFAULT_VIEW_NAME;
 
   if (!id || !correo || !nombre || !ROLE_VALUES.has(rol)) {
     return jsonResponse({ error: 'ID, correo, nombre y rol validos son obligatorios.' }, 400);
   }
+
+  const { data: previousProfile } = await adminClient
+    .from('usuarios')
+    .select('id, correo, nombre, rol, institucion, proyectos, activo')
+    .eq('id', id)
+    .maybeSingle();
 
   const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(id, {
     email: correo,
@@ -217,21 +326,40 @@ async function updateAccount(adminClient: ReturnType<typeof createClient>, paylo
     return jsonResponse({ error: profileError.message || 'No fue posible actualizar el perfil del usuario.' }, 400);
   }
 
+  await insertAuditLog(adminClient, callerUser, callerProfile, {
+    action: 'update',
+    entityId: profile.id,
+    entityLabel: `${profile.nombre} <${profile.correo}>`,
+    beforeData: sanitizeProfileForAudit(previousProfile),
+    afterData: sanitizeProfileForAudit(profile),
+    status: 'success',
+    viewName
+  });
+
   return jsonResponse({ user: profile, message: 'Cuenta actualizada.' });
 }
 
 async function toggleAccount(
-  adminClient: ReturnType<typeof createClient>,
-  publicClient: ReturnType<typeof createClient>,
+  adminClient: SupabaseClient,
+  publicClient: SupabaseClient,
+  callerUser: { id: string; email?: string | null },
+  callerProfile: CallerProfile,
   payload: Record<string, unknown>
 ) {
   const id = String(payload.id || '').trim();
   const activo = payload.activo === true;
   const redirectTo = String(payload.redirectTo || '').trim();
+  const viewName = String(payload.viewName || DEFAULT_VIEW_NAME).trim() || DEFAULT_VIEW_NAME;
 
   if (!id) {
     return jsonResponse({ error: 'ID de usuario obligatorio.' }, 400);
   }
+
+  const { data: previousProfile } = await adminClient
+    .from('usuarios')
+    .select('id, correo, nombre, rol, institucion, proyectos, activo')
+    .eq('id', id)
+    .maybeSingle();
 
   const { data: profile, error: profileError } = await adminClient
     .from('usuarios')
@@ -245,34 +373,70 @@ async function toggleAccount(
   }
 
   if (!activo) {
+    await insertAuditLog(adminClient, callerUser, callerProfile, {
+      action: 'deactivate',
+      entityId: profile.id,
+      entityLabel: `${profile.nombre} <${profile.correo}>`,
+      beforeData: sanitizeProfileForAudit(previousProfile),
+      afterData: sanitizeProfileForAudit(profile),
+      status: 'success',
+      viewName
+    });
+
     return jsonResponse({ user: profile, message: 'Cuenta desactivada.' });
   }
 
+  let status: 'success' | 'warning' = 'success';
+  let message = 'Cuenta activada y correo de acceso enviado.';
+  let errorMessage = '';
+
   if (!redirectTo) {
-    return jsonResponse({ user: profile, message: 'Cuenta activada.' });
+    message = 'Cuenta activada.';
+  } else {
+    try {
+      await sendRecoveryEmail(publicClient, profile.correo, redirectTo);
+    } catch (error) {
+      status = 'warning';
+      message = 'Cuenta activada, pero no fue posible enviar el correo de acceso.';
+      errorMessage = error instanceof Error ? error.message : 'No fue posible enviar el correo de acceso.';
+    }
   }
 
-  try {
-    await sendRecoveryEmail(publicClient, profile.correo, redirectTo);
-  } catch (error) {
+  await insertAuditLog(adminClient, callerUser, callerProfile, {
+    action: 'activate',
+    entityId: profile.id,
+    entityLabel: `${profile.nombre} <${profile.correo}>`,
+    beforeData: sanitizeProfileForAudit(previousProfile),
+    afterData: sanitizeProfileForAudit(profile),
+    status,
+    viewName,
+    metadata: {
+      recovery_email_sent: status === 'success' && Boolean(redirectTo)
+    }
+  });
+
+  if (status === 'warning') {
     return jsonResponse({
       user: profile,
       warning: true,
-      message: 'Cuenta activada, pero no fue posible enviar el correo de acceso.',
-      error: error instanceof Error ? error.message : 'No fue posible enviar el correo de acceso.'
+      message,
+      error: errorMessage
     }, 207);
   }
 
-  return jsonResponse({ user: profile, message: 'Cuenta activada y correo de acceso enviado.' });
+  return jsonResponse({ user: profile, message });
 }
 
 async function resetPassword(
-  adminClient: ReturnType<typeof createClient>,
-  publicClient: ReturnType<typeof createClient>,
+  adminClient: SupabaseClient,
+  publicClient: SupabaseClient,
+  callerUser: { id: string; email?: string | null },
+  callerProfile: CallerProfile,
   payload: Record<string, unknown>
 ) {
   const userId = String(payload.id || '').trim();
   const redirectTo = String(payload.redirectTo || '').trim();
+  const viewName = String(payload.viewName || DEFAULT_VIEW_NAME).trim() || DEFAULT_VIEW_NAME;
 
   if (!userId || !redirectTo) {
     return jsonResponse({ error: 'ID y redirectTo son obligatorios para reset_password.' }, 400);
@@ -280,7 +444,7 @@ async function resetPassword(
 
   const { data: profile, error: profileError } = await adminClient
     .from('usuarios')
-    .select('correo')
+    .select('id, correo, nombre, rol, institucion, proyectos, activo')
     .eq('id', userId)
     .maybeSingle();
 
@@ -295,6 +459,19 @@ async function resetPassword(
       error: error instanceof Error ? error.message : 'No fue posible generar el correo de recuperacion.'
     }, 400);
   }
+
+  await insertAuditLog(adminClient, callerUser, callerProfile, {
+    action: 'reset_password',
+    entityId: profile.id,
+    entityLabel: `${profile.nombre} <${profile.correo}>`,
+    beforeData: null,
+    afterData: null,
+    status: 'success',
+    viewName,
+    metadata: {
+      recovery_email_sent: true
+    }
+  });
 
   return jsonResponse({ message: 'Correo de recuperacion generado.' });
 }
@@ -319,13 +496,13 @@ Deno.serve(async (request) => {
 
     switch (action) {
       case 'create':
-        return await createAccount(context.adminClient, context.publicClient, payload);
+        return await createAccount(context.adminClient, context.publicClient, context.callerUser, context.callerProfile, payload);
       case 'update':
-        return await updateAccount(context.adminClient, payload);
+        return await updateAccount(context.adminClient, context.callerUser, context.callerProfile, payload);
       case 'toggle':
-        return await toggleAccount(context.adminClient, context.publicClient, payload);
+        return await toggleAccount(context.adminClient, context.publicClient, context.callerUser, context.callerProfile, payload);
       case 'reset_password':
-        return await resetPassword(context.adminClient, context.publicClient, payload);
+        return await resetPassword(context.adminClient, context.publicClient, context.callerUser, context.callerProfile, payload);
       default:
         return jsonResponse({ error: 'Accion no soportada.' }, 400);
     }
@@ -334,5 +511,3 @@ Deno.serve(async (request) => {
     return jsonResponse({ error: message }, 500);
   }
 });
-
-
