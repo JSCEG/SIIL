@@ -383,7 +383,7 @@
             return;
         }
 
-        if (!requireAuth({ allowedRoles: ['admin'] })) {
+        if (!requireAuth()) {
             return;
         }
 
@@ -449,6 +449,7 @@
         protectAction
     };
 }());
+
 
 
 

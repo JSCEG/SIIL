@@ -118,32 +118,63 @@ if (!customElements.get('site-header')) {
     customElements.define('site-header', SiteHeader);
 }
 
+const BOTTOM_NAV_BY_ROLE = {
+    admin: [
+        { key: 'home', label: 'Inicio', href: 'index.html', icon: 'fa-house', matches: ['index.html', 'dashboard.html'] },
+        { key: 'accounts', label: 'Cuentas', href: 'dashboard.html', icon: 'fa-users-gear', matches: ['dashboard.html'] },
+        { key: 'records', label: 'Registros', href: 'registro-muestras.html', icon: 'fa-vials', matches: ['registro-muestras.html'] },
+        { key: 'results', label: 'Resultados', href: 'detalle-central.html', icon: 'fa-chart-simple', matches: ['detalle-central.html'] },
+        { key: 'map', label: 'Mapa', href: 'index_mapa.html', icon: 'fa-map-location-dot', matches: ['index_mapa.html'] }
+    ],
+    coordinador: [
+        { key: 'home', label: 'Inicio', href: 'index.html', icon: 'fa-house', matches: ['index.html'] },
+        { key: 'flow', label: 'Flujo', href: 'registro-muestras.html', icon: 'fa-diagram-project', matches: ['registro-muestras.html'] },
+        { key: 'results', label: 'Resultados', href: 'detalle-central.html', icon: 'fa-chart-simple', matches: ['detalle-central.html'] },
+        { key: 'map', label: 'Mapa', href: 'index_mapa.html', icon: 'fa-map-location-dot', matches: ['index_mapa.html'] }
+    ],
+    geologo: [
+        { key: 'home', label: 'Inicio', href: 'index.html', icon: 'fa-house', matches: ['index.html'] },
+        { key: 'samples', label: 'Muestras', href: 'registro-muestras.html', icon: 'fa-vials', matches: ['registro-muestras.html'] },
+        { key: 'results', label: 'Resultados', href: 'detalle-central.html', icon: 'fa-chart-line', matches: ['detalle-central.html'] },
+        { key: 'map', label: 'Mapa', href: 'index_mapa.html', icon: 'fa-map-location-dot', matches: ['index_mapa.html'] }
+    ],
+    operador_campo: [
+        { key: 'home', label: 'Inicio', href: 'index.html', icon: 'fa-house', matches: ['index.html'] },
+        { key: 'records', label: 'Registros', href: 'registro-muestras.html', icon: 'fa-vials', matches: ['registro-muestras.html'] },
+        { key: 'map', label: 'Mapa', href: 'index_mapa.html', icon: 'fa-map-location-dot', matches: ['index_mapa.html'] }
+    ],
+    tecnico_lab: [
+        { key: 'home', label: 'Inicio', href: 'index.html', icon: 'fa-house', matches: ['index.html'] },
+        { key: 'samples', label: 'Muestras', href: 'registro-muestras.html', icon: 'fa-vials', matches: ['registro-muestras.html'] },
+        { key: 'lab', label: 'Lab', href: 'detalle-central.html', icon: 'fa-flask-vial', matches: ['detalle-central.html'] },
+        { key: 'results', label: 'Resultados', href: 'detalle-central.html', icon: 'fa-chart-simple', matches: ['detalle-central.html'] }
+    ],
+    default: [
+        { key: 'home', label: 'Inicio', href: 'index.html', icon: 'fa-house', matches: ['index.html'] },
+        { key: 'records', label: 'Registros', href: 'registro-muestras.html', icon: 'fa-vials', matches: ['registro-muestras.html'] },
+        { key: 'results', label: 'Resultados', href: 'detalle-central.html', icon: 'fa-chart-simple', matches: ['detalle-central.html'] },
+        { key: 'map', label: 'Mapa', href: 'index_mapa.html', icon: 'fa-map-location-dot', matches: ['index_mapa.html'] }
+    ]
+};
+
 class SiteBottomNav extends HTMLElement {
     connectedCallback() {
         const currentPath = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
-        const isHome = currentPath === 'index.html' || currentPath === 'dashboard.html';
-        const isStats = currentPath === 'registro-muestras.html';
-        const isResults = currentPath === 'detalle-central.html';
-        const isMap = currentPath === 'index_mapa.html';
+        const currentUser = window.AuthService?.getCurrentUser?.();
+        const role = currentUser?.role || 'default';
+        const items = BOTTOM_NAV_BY_ROLE[role] || BOTTOM_NAV_BY_ROLE.default;
 
         this.innerHTML = `
             <nav class="site-bottom-nav" aria-label="Navegacion principal">
-                <a class="site-bottom-nav__item ${isHome ? 'is-active' : ''}" href="index.html">
-                    <i class="fa-solid fa-house"></i>
-                    <span>Inicio</span>
-                </a>
-                <a class="site-bottom-nav__item ${isStats ? 'is-active' : ''}" href="registro-muestras.html">
-                    <i class="fa-solid fa-vials"></i>
-                    <span>Registros</span>
-                </a>
-                <a class="site-bottom-nav__item ${isResults ? 'is-active' : ''}" href="detalle-central.html">
-                    <i class="fa-solid fa-chart-simple"></i>
-                    <span>Resultados</span>
-                </a>
-                <a class="site-bottom-nav__item ${isMap ? 'is-active' : ''}" href="index_mapa.html">
-                    <i class="fa-solid fa-map-location-dot"></i>
-                    <span>Mapa</span>
-                </a>
+                ${items.map((item) => {
+                    const isActive = item.matches.includes(currentPath);
+                    return `
+                        <a class="site-bottom-nav__item ${isActive ? 'is-active' : ''}" href="${item.href}">
+                            <i class="fa-solid ${item.icon}"></i>
+                            <span>${item.label}</span>
+                        </a>
+                    `;
+                }).join('')}
             </nav>
         `;
     }
