@@ -475,7 +475,7 @@
                 </div>
                 
                 <h1 class="login-title">SIIL</h1>
-                <p class="login-subtitle">Sistema Integral de Información del Litio</p>
+                <p class="login-subtitle">Acceso administrativo al Sistema Integral de Información del Litio</p>
             </div>
 
             <form id="loginForm" class="login-form">
@@ -487,18 +487,18 @@
 
                 <!-- Username -->
                 <div class="form-group">
-                    <label class="form-label" for="username">Usuario</label>
+                    <label class="form-label" for="email">Correo institucional</label>
                     <div class="input-wrapper">
                         <input
                             class="form-input"
-                            id="username"
-                            name="username"
-                            type="text"
-                            placeholder="Nombre de usuario"
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="admin@dominio.gob.mx"
                             required
                             autocomplete="username"
                         />
-                        <i class="fa-solid fa-user input-icon"></i>
+                        <i class="fa-solid fa-envelope input-icon"></i>
                     </div>
                 </div>
 
@@ -528,7 +528,7 @@
                         <input type="checkbox" name="remember" />
                         <span>Recordarme</span>
                     </label>
-                    <a href="#" class="forgot-link">¿Olvidó su contraseña?</a>
+                    <a href="#" class="forgot-link" id="forgotPasswordLink">Recuperar contrasena</a>
                 </div>
 
                 <!-- Submit Button -->
@@ -539,7 +539,7 @@
 
                 <!-- Sign Up Link -->
                 <div class="login-footer">
-                    o <a href="#">Registrarse</a>
+                    Acceso temporalmente habilitado solo para cuentas con rol admin.
                 </div>
             </form>
         </div>
@@ -628,7 +628,9 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/preloader.js"></script>
+    <script src="config.local.js"></script>
+    <script src="js/shared/auth.js"></script>
+    <script src="js/shared/preloader.js"></script>
     <script src="js/login.js"></script>
 
     <script>
@@ -675,3 +677,9 @@
 </body>
 
 </html>
+
+
+
+
+
+

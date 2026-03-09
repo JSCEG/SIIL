@@ -1,0 +1,31 @@
+{
+  "name": "siil-registro-muestras",
+  "version": "1.0.0",
+  "description": "Sistema Integral de Información del Litio - Registro de Muestras",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "test:verbose": "node --experimental-vm-modules node_modules/jest/bin/jest.js --verbose",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [
+    "siil",
+    "litio",
+    "muestras",
+    "geologia"
+  ],
+  "author": "SENER - LitioMX",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.2",
+    "jest": "^30.2.0",
+    "prettier": "^3.8.1"
+  }
+}

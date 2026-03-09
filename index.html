@@ -75,12 +75,15 @@
             font-weight: 800;
             margin-bottom: 1rem;
             line-height: 1.2;
+            color: #ffffff;
+            text-shadow: 0 6px 18px rgba(31, 41, 55, 0.18);
         }
 
         .hero-subtitle {
             font-size: 1.125rem;
-            opacity: 0.95;
+            opacity: 0.98;
             max-width: 600px;
+            color: rgba(255, 255, 255, 0.96);
         }
 
         .main-container {
@@ -284,6 +287,16 @@
             color: #9B2247;
         }
 
+
+        .service-card--admin {
+            border-color: rgba(165, 127, 44, 0.35);
+            background: linear-gradient(180deg, #fffdf8 0%, #ffffff 100%);
+        }
+
+        .service-card--admin .service-icon {
+            background: linear-gradient(135deg, #A57F2C 0%, #8A6722 100%);
+            box-shadow: 0 4px 12px rgba(165, 127, 44, 0.28);
+        }
         @media (max-width: 768px) {
             .hero-title {
                 font-size: 1.875rem;
@@ -469,11 +482,20 @@
 
     <site-bottom-nav></site-bottom-nav>
 
-    <script src="js/preloader.js"></script>
+    <script src="config.local.js"></script>
+    <script src="js/shared/preloader.js"></script>
     <script src="js/login.js"></script>
-    <script src="js/shared-layout.js"></script>
-    <script src="js/shared-breadcrumbs.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="js/shared/shared-layout.js"></script>
+    <script src="js/shared/shared-breadcrumbs.js"></script>
+    <script src="js/shared/auth.js"></script>
+    <script src="js/pages/index-dashboard.js"></script>
 </body>
 
 </html>
+
+
+
+
+
+
+

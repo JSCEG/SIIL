@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Build outputs
+dist/
+build/
+css/output.css
+
+# Test coverage
+coverage/
+
+# Configuration files
+tailwind.config.js
+
+# Python files
+*.py
+
+# Temporary files
+_tmp_*
+
+# Documentation
+*.md
+
+# Git
+.git/

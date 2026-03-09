@@ -73,11 +73,18 @@
             gap: 1.5rem;
         }
 
-        .registro-card {
+        .registro-card,
+        .wizard-shell,
+        .catalog-shell,
+        .info-banner,
+        .workflow-section {
             background: white;
             border-radius: 1rem;
-            overflow: hidden;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .registro-card {
+            overflow: hidden;
             transition: all 0.3s;
             border: 2px solid transparent;
             display: flex;
@@ -160,72 +167,78 @@
             border-top: 1px solid #F3F4F6;
         }
 
-        .card-button {
+        .card-button,
+        .primary-button,
+        .secondary-button {
             width: 100%;
-            background: #9B2247;
-            color: white;
             padding: 0.875rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
+            border-radius: 0.75rem;
+            font-weight: 700;
             border: none;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
         }
 
-        .card-button:hover:not(:disabled) {
+        .card-button,
+        .primary-button {
+            background: #9B2247;
+            color: white;
+        }
+
+        .secondary-button {
+            background: #F3F4F6;
+            color: #374151;
+        }
+
+        .card-button:hover:not(:disabled),
+        .primary-button:hover:not(:disabled) {
             background: #7f1c3a;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(155, 34, 71, 0.3);
         }
 
-        .card-button:disabled {
+        .secondary-button:hover:not(:disabled) {
+            background: #E5E7EB;
+        }
+
+        .card-button:disabled,
+        .primary-button:disabled,
+        .secondary-button:disabled {
             background: #D1D5DB;
+            color: #6B7280;
             cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .wizard-shell,
+        .catalog-shell,
+        .info-banner,
+        .workflow-section {
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .wizard-grid {
+            display: grid;
+            gap: 1rem;
         }
 
         .info-banner {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-top: 2rem;
             border-left: 4px solid #9B2247;
         }
 
-        .info-banner-title {
+        .info-banner-title,
+        .workflow-title,
+        .section-title {
             font-size: 1rem;
             font-weight: 700;
             color: #1F2937;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .info-banner-text {
-            font-size: 0.875rem;
-            color: #6B7280;
-            line-height: 1.6;
-        }
-
-        .workflow-section {
-            background: white;
-            border-radius: 1rem;
-            padding: 2rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-top: 2rem;
-        }
-
-        .workflow-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1F2937;
-            margin-bottom: 1.5rem;
-            text-align: center;
+            margin-bottom: 0.75rem;
         }
 
         .workflow-steps {
@@ -236,7 +249,6 @@
 
         .workflow-step {
             text-align: center;
-            position: relative;
         }
 
         .step-number {
@@ -261,10 +273,12 @@
             margin-bottom: 0.5rem;
         }
 
-        .step-description {
-            font-size: 0.75rem;
+        .step-description,
+        .info-banner-text,
+        .catalog-copy {
+            font-size: 0.875rem;
             color: #6B7280;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         @media (max-width: 768px) {
@@ -272,7 +286,8 @@
                 font-size: 1.5rem;
             }
 
-            .registro-grid {
+            .registro-grid,
+            .workflow-steps {
                 grid-template-columns: 1fr;
             }
         }
@@ -285,176 +300,264 @@
 
     <main class="registro-container">
         <div class="page-header">
-            <h1 class="page-title">Registro de Muestras y Análisis</h1>
+            <h1 class="page-title">Registro de Muestras y Analisis</h1>
             <p class="page-subtitle">
-                Seleccione el tipo de registro que desea realizar para dar seguimiento completo 
-                a los procesos de campo y laboratorio del Sistema Integral de Información del Litio.
+                Flujo unificado para barrenos y muestras. El esquema sigue el cuestionario de arquitectura del SIIL
+                y ahora queda listo para persistirse en Supabase con trazabilidad por usuario.
             </p>
         </div>
 
-        <!-- Registro Cards Grid -->
-        <div class="registro-grid">
-            <!-- Registro de Barreno -->
-            <article class="registro-card">
-                <div class="card-image">
-                    <img src="img/barreno.png" alt="Registro de Barreno" onerror="this.style.display='none';">
-                    <div class="card-badge">
-                        <span>1</span>
-                        <span>Paso Inicial</span>
+        <section id="cardsHome">
+            <div class="registro-grid">
+                <article class="registro-card">
+                    <div class="card-image">
+                        <img src="img/barreno.png" alt="Registro de Barreno" onerror="this.style.display='none';">
+                        <div class="card-badge">
+                            <span>1</span>
+                            <span>Paso Inicial</span>
+                        </div>
                     </div>
-                </div>
-                <div class="card-content">
-                    <h2 class="card-title">Registro de Barreno</h2>
-                    <p class="card-description">
-                        Documentación detallada de la perforación, profundidad alcanzada y características 
-                        de la estratigrafía del terreno. Incluye registro de intervalos y coordenadas geográficas.
-                    </p>
-                    <div class="card-meta">
-                        <i class="fa-solid fa-layer-group"></i>
-                        <span>Operación de Campo</span>
+                    <div class="card-content">
+                        <h2 class="card-title">Registro de Barreno</h2>
+                        <p class="card-description">
+                            Captura la perforacion, longitud y continuidad de intervalos. Este catalogo alimenta las
+                            muestras de arcilla en profundidad y define la integridad del muestreo.
+                        </p>
+                        <div class="card-meta">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>Operacion de Campo</span>
+                        </div>
+                        <button id="openBarrenoBtn" class="card-button" type="button">
+                            <i class="fa-solid fa-plus-circle"></i>
+                            Iniciar Registro
+                        </button>
                     </div>
-                    <button class="card-button">
-                        <i class="fa-solid fa-plus-circle"></i>
-                        Iniciar Registro
-                    </button>
-                </div>
-            </article>
+                </article>
 
-            <!-- Registro de Muestra -->
-            <article class="registro-card">
-                <div class="card-image">
-                    <img src="img/mujer.png" alt="Registro de Muestra" onerror="this.style.display='none';">
-                    <div class="card-badge">
-                        <span>2</span>
-                        <span>Recolección</span>
+                <article class="registro-card">
+                    <div class="card-image">
+                        <img src="img/mujer.png" alt="Registro de Muestra" onerror="this.style.display='none';">
+                        <div class="card-badge">
+                            <span>2</span>
+                            <span>Recoleccion</span>
+                        </div>
                     </div>
-                </div>
-                <div class="card-content">
-                    <h2 class="card-title">Registro de Muestra</h2>
-                    <p class="card-description">
-                        Captura de datos físicos, etiquetado y ubicación geoespacial exacta de la muestra 
-                        recolectada. Sistema de trazabilidad completo desde campo hasta laboratorio.
-                    </p>
-                    <div class="card-meta">
-                        <i class="fa-solid fa-vial"></i>
-                        <span>Muestreo y Etiquetado</span>
+                    <div class="card-content">
+                        <h2 class="card-title">Registro de Muestra</h2>
+                        <p class="card-description">
+                            Captura el contexto geologico, geografico y operativo de arcillas y salmueras, y enlaza
+                            muestras de nucleo contra el catalogo de barrenos.
+                        </p>
+                        <div class="card-meta">
+                            <i class="fa-solid fa-vial"></i>
+                            <span>Muestreo y Etiquetado</span>
+                        </div>
+                        <button id="openMuestraBtn" class="card-button" type="button">
+                            <i class="fa-solid fa-plus-circle"></i>
+                            Iniciar Registro
+                        </button>
                     </div>
-                    <button class="card-button">
-                        <i class="fa-solid fa-plus-circle"></i>
-                        Iniciar Registro
-                    </button>
-                </div>
-            </article>
+                </article>
 
-            <!-- Análisis de Campo -->
-            <article class="registro-card">
-                <div class="card-image">
-                    <img src="img/analisis_campo.png" alt="Análisis de Campo" onerror="this.style.display='none';">
-                    <div class="card-badge">
-                        <span>3</span>
-                        <span>Análisis In Situ</span>
+                <article class="registro-card">
+                    <div class="card-image">
+                        <img src="img/analisis_campo.png" alt="Analisis de Campo" onerror="this.style.display='none';">
+                        <div class="card-badge">
+                            <span>3</span>
+                            <span>Analisis In Situ</span>
+                        </div>
                     </div>
-                </div>
-                <div class="card-content">
-                    <h2 class="card-title">Análisis de Campo</h2>
-                    <p class="card-description">
-                        Resultados de pruebas rápidas realizadas in situ durante el proceso de muestreo. 
-                        Mediciones preliminares de pH, conductividad y otros parámetros físico-químicos.
-                    </p>
-                    <div class="card-meta">
-                        <i class="fa-solid fa-flask"></i>
-                        <span>Pruebas Rápidas</span>
+                    <div class="card-content">
+                        <h2 class="card-title">Analisis de Campo</h2>
+                        <p class="card-description">
+                            El esquema ya deja preparada la relacion por `id_muestra` para la siguiente fase de LIBS y XRF.
+                        </p>
+                        <div class="card-meta">
+                            <i class="fa-solid fa-flask"></i>
+                            <span>Proxima Fase</span>
+                        </div>
+                        <button class="card-button" disabled type="button">
+                            <i class="fa-solid fa-clock"></i>
+                            Proximamente
+                        </button>
                     </div>
-                    <button class="card-button" disabled>
-                        <i class="fa-solid fa-clock"></i>
-                        Próximamente
-                    </button>
-                </div>
-            </article>
+                </article>
 
-            <!-- Análisis de Laboratorio -->
-            <article class="registro-card">
-                <div class="card-image">
-                    <img src="img/analisis_laboratorio.png" alt="Análisis de Laboratorio" onerror="this.style.display='none';">
-                    <div class="card-badge">
-                        <span>4</span>
-                        <span>Resultados Finales</span>
+                <article class="registro-card">
+                    <div class="card-image">
+                        <img src="img/analisis_laboratorio.png" alt="Analisis de Laboratorio" onerror="this.style.display='none';">
+                        <div class="card-badge">
+                            <span>4</span>
+                            <span>Resultados Finales</span>
+                        </div>
                     </div>
-                </div>
-                <div class="card-content">
-                    <h2 class="card-title">Análisis de Laboratorio</h2>
-                    <p class="card-description">
-                        Documentación técnica y resultados exhaustivos obtenidos en laboratorio especializado. 
-                        Incluye concentraciones de litio, elementos asociados y certificaciones oficiales.
-                    </p>
-                    <div class="card-meta">
-                        <i class="fa-solid fa-microscope"></i>
-                        <span>Análisis Completo</span>
+                    <div class="card-content">
+                        <h2 class="card-title">Analisis de Laboratorio</h2>
+                        <p class="card-description">
+                            El modelo tambien deja listas las referencias para ICP y carga posterior de resultados certificados.
+                        </p>
+                        <div class="card-meta">
+                            <i class="fa-solid fa-microscope"></i>
+                            <span>Proxima Fase</span>
+                        </div>
+                        <button class="card-button" disabled type="button">
+                            <i class="fa-solid fa-clock"></i>
+                            Proximamente
+                        </button>
                     </div>
-                    <button class="card-button" disabled>
-                        <i class="fa-solid fa-clock"></i>
-                        Próximamente
-                    </button>
-                </div>
-            </article>
-        </div>
+                </article>
+            </div>
 
-        <!-- Workflow Section -->
-        <div class="workflow-section">
-            <h3 class="workflow-title">Flujo de Trabajo del Sistema</h3>
-            <div class="workflow-steps">
-                <div class="workflow-step">
-                    <div class="step-number">1</div>
-                    <div class="step-title">Perforación</div>
-                    <div class="step-description">
-                        Registro del barreno con datos de profundidad e intervalos
+            <div class="workflow-section">
+                <h3 class="workflow-title">Flujo de Trabajo del Sistema</h3>
+                <div class="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Perforacion</div>
+                        <div class="step-description">Registro del barreno con datos de profundidad e intervalos.</div>
                     </div>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-number">2</div>
-                    <div class="step-title">Muestreo</div>
-                    <div class="step-description">
-                        Recolección y etiquetado de muestras en campo
+                    <div class="workflow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Muestreo</div>
+                        <div class="step-description">Recoleccion y etiquetado de muestras con trazabilidad.</div>
                     </div>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-number">3</div>
-                    <div class="step-title">Análisis</div>
-                    <div class="step-description">
-                        Pruebas de campo y análisis de laboratorio
+                    <div class="workflow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Analisis</div>
+                        <div class="step-description">Relacion del catalogo de muestras con fases de campo y laboratorio.</div>
                     </div>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-number">4</div>
-                    <div class="step-title">Resultados</div>
-                    <div class="step-description">
-                        Generación de reportes y certificaciones
+                    <div class="workflow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Resultados</div>
+                        <div class="step-description">Consulta posterior por id_muestra y evidencia asociada.</div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Info Banner -->
-        <div class="info-banner">
-            <div class="info-banner-title">
-                <i class="fa-solid fa-circle-info"></i>
-                Información Importante
+            <div class="info-banner">
+                <div class="info-banner-title">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Esquema conectado a Supabase
+                </div>
+                <p class="info-banner-text">
+                    Este modulo deja de depender solo de almacenamiento local. Si existe una sesion valida, barrenos,
+                    intervalos y muestras se sincronizan con Supabase. Si no hay conexion, el sistema conserva un respaldo local.
+                </p>
             </div>
-            <p class="info-banner-text">
-                Todos los registros quedan almacenados en el sistema con trazabilidad completa. 
-                Los datos capturados son validados automáticamente y pueden ser consultados en tiempo real 
-                desde el módulo de Resultados. Para soporte técnico o dudas sobre el proceso de registro, 
-                consulte la documentación o contacte al equipo de soporte.
-            </p>
-        </div>
+        </section>
+
+        <section id="muestraWizard" class="hidden">
+            <div class="wizard-shell">
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <button id="backToCardsBtn" class="secondary-button !w-auto" type="button">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Volver
+                        </button>
+                        <div id="dynamicStepTitle" class="mt-4">
+                            <h2 class="section-title">Registro de Muestra</h2>
+                        </div>
+                        <p id="dynamicStepSubtitle" class="catalog-copy"></p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 md:max-w-sm">
+                        Los campos del wizard se ajustan segun la fuente de la muestra y guardan el payload tecnico para trazabilidad.
+                    </div>
+                </div>
+                <div id="stepIndicator" class="mt-6 flex flex-wrap gap-2"></div>
+                <div id="formMessages" class="hidden rounded-lg border px-3 py-2 text-sm mt-6"></div>
+                <form id="registroMuestrasForm" class="mt-6 space-y-6">
+                    <div id="dynamicFields" class="grid grid-cols-1 gap-4 md:grid-cols-2"></div>
+                    <div class="flex flex-col gap-3 border-t border-slate-200 pt-4 md:flex-row md:justify-between">
+                        <button id="prevStepBtn" class="secondary-button md:!w-auto" type="button">Paso anterior</button>
+                        <div class="flex flex-col gap-3 md:flex-row">
+                            <button id="nextStepBtn" class="secondary-button md:!w-auto" type="button">Siguiente</button>
+                            <button id="submitBtn" class="primary-button hidden md:!w-auto" type="submit">Guardar muestra</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="catalog-shell">
+                <h3 class="section-title">Payload tecnico</h3>
+                <p class="catalog-copy">Vista previa del registro que se enviara al esquema `muestras` en Supabase.</p>
+                <pre id="payloadPreview" class="mt-4 overflow-x-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100"></pre>
+            </div>
+        </section>
+
+        <section id="barrenoWizard" class="hidden">
+            <div class="wizard-shell">
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <button id="backToCardsFromBarrenoBtn" class="secondary-button !w-auto" type="button">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Volver
+                        </button>
+                        <h2 class="section-title mt-4">Registro de Barreno</h2>
+                        <p class="catalog-copy">Se almacena el barreno y sus intervalos para reutilizarse en muestras de nucleo.</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 md:max-w-sm">
+                        El ID del barreno se construye automaticamente con proyecto, subregion y consecutivo local/sincronizado.
+                    </div>
+                </div>
+                <div id="barrenoMessages" class="hidden md:col-span-2 rounded-lg border px-3 py-2 text-sm mt-6"></div>
+                <form id="registroBarrenoForm" class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoId">Barreno (ID)</label>
+                        <input id="barrenoId" class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm" type="text" readonly>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoProyecto">Proyecto</label>
+                        <input id="barrenoProyecto" class="w-full rounded-lg border-slate-300 text-sm" type="text" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoResponsable">Responsable</label>
+                        <input id="barrenoResponsable" class="w-full rounded-lg border-slate-300 text-sm" type="text" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoLongitud">Longitud perforada (m)</label>
+                        <input id="barrenoLongitud" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="any" min="0.01" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoEstado">Estado</label>
+                        <select id="barrenoEstado" class="w-full rounded-lg border-slate-300 text-sm" required></select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoMunicipio">Municipio</label>
+                        <select id="barrenoMunicipio" class="w-full rounded-lg border-slate-300 text-sm" required></select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <div class="mb-3 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-700">Intervalos</h3>
+                                <p class="catalog-copy">Cada intervalo debe ser continuo y cerrar exactamente en la longitud perforada.</p>
+                            </div>
+                            <button id="addIntervalRowBtn" class="secondary-button !w-auto" type="button">Agregar intervalo</button>
+                        </div>
+                        <div id="barrenoIntervalRows" class="space-y-3"></div>
+                    </div>
+                    <div class="md:col-span-2 flex justify-end">
+                        <button class="primary-button md:!w-auto" type="submit">Guardar barreno</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="catalog-shell">
+                <h3 class="section-title">Catalogo de barrenos</h3>
+                <p class="catalog-copy">Listado de barrenos disponibles para vincular muestras de profundidad.</p>
+                <ul id="barrenosList" class="mt-4 space-y-3"></ul>
+            </div>
+        </section>
     </main>
 
     <site-bottom-nav></site-bottom-nav>
 
-    <script src="js/preloader.js"></script>
-    <script src="js/shared-layout.js"></script>
-    <script src="js/shared-breadcrumbs.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="config.local.js"></script>
+    <script src="js/shared/preloader.js"></script>
+    <script src="js/shared/shared-layout.js"></script>
+    <script src="js/shared/shared-breadcrumbs.js"></script>
+    <script src="js/shared/auth.js"></script>
+    <script src="registro-muestras-supabase.js"></script>
 </body>
 
 </html>
+

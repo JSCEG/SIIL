@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Build outputs
+dist/
+build/
+css/output.css
+
+# Cache
+.cache/
+.eslintcache
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary files
+*.tmp
+*.temp
+_tmp_*
+
+# Git
+.git/
+.gitignore
+
+# Documentation (preserve formatting)
+*.md
