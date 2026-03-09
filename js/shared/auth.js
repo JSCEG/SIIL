@@ -28,11 +28,11 @@
 
     function validateConfig(config) {
         if (!config) {
-            throw new Error('Falta configurar Supabase en config.local.js');
+            throw new Error('Falta configurar Supabase en config.js');
         }
 
         if (hasPlaceholderValue(config.url) || hasPlaceholderValue(config.anonKey)) {
-            throw new Error('config.local.js aun tiene valores de ejemplo. Reemplace la URL y la anon key reales de Supabase.');
+            throw new Error('config.js aun tiene valores de ejemplo. Reemplace la URL y la anon key reales de Supabase.');
         }
     }
 
@@ -449,6 +449,7 @@
         protectAction
     };
 }());
+
 
 
 

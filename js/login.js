@@ -85,7 +85,7 @@ class LoginManager {
         this.hideError();
 
         if (!window.AuthService?.getConfig()) {
-            this.showError('Configure Supabase en config.local.js antes de iniciar sesion.');
+            this.showError('Configure Supabase en config.js antes de iniciar sesion.');
             return;
         }
 
@@ -123,7 +123,7 @@ class LoginManager {
 
     validateInputs(email, password) {
         if (!window.AuthService?.getConfig()) {
-            this.showError('Configure Supabase en config.local.js antes de iniciar sesion.');
+            this.showError('Configure Supabase en config.js antes de iniciar sesion.');
             return false;
         }
 
@@ -246,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.LoginManager = LoginManager;
+
 
 
 
