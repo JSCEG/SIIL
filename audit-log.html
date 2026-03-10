@@ -27,7 +27,7 @@
                 <div>
                     <p class="admin-kicker">Administración SIIL</p>
                     <h1>Bitácora de acciones</h1>
-                    <p>Seguimiento de cambios administrativos sobre cuentas, accesos y movimientos relevantes del módulo de administración.</p>
+                    <p>Seguimiento de cambios sobre cuentas, accesos, barrenos, muestras y movimientos relevantes de la plataforma.</p>
                 </div>
                 <div class="admin-hero-actions">
                     <a class="btn btn-secondary" href="dashboard.html">Volver a cuentas</a>
@@ -39,7 +39,7 @@
                 <div class="panel-header panel-header--audit">
                     <div>
                         <h2>Eventos recientes</h2>
-                        <p>Aquí puede revisar quién hizo qué, cuándo lo hizo y qué cambió dentro de la administración.</p>
+                        <p>Aquí puede revisar quién hizo qué, cuándo lo hizo y qué cambió en cuentas y en los registros operativos.</p>
                     </div>
                     <span id="auditCount" class="admin-inline-count">0 eventos</span>
                 </div>
@@ -49,11 +49,17 @@
                         <option value="">Todas las acciones</option>
                         <option value="create">Alta</option>
                         <option value="update">Edición</option>
+                        <option value="delete">Baja</option>
                         <option value="activate">Activación</option>
                         <option value="deactivate">Desactivación</option>
                         <option value="reset_password">Recuperación</option>
                     </select>
-                    <input id="auditUserFilter" class="admin-input admin-input--compact" type="text" placeholder="Buscar por usuario o correo">
+                    <select id="auditModuleFilter" class="admin-input admin-input--compact">
+                        <option value="">Todos los módulos</option>
+                        <option value="user_accounts">Usuarios y cuentas</option>
+                        <option value="sample_registry">Registro de muestras y barrenos</option>
+                    </select>
+                    <input id="auditUserFilter" class="admin-input admin-input--compact" type="text" placeholder="Buscar por usuario o referencia">
                     <input id="auditDateFilter" class="admin-input admin-input--compact" type="date">
                     <button id="clearAuditFilters" type="button" class="btn btn-secondary btn-compact">Limpiar filtros</button>
                 </div>

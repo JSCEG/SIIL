@@ -3,10 +3,16 @@
 
     const ACTION_LABELS = {
         create: 'Alta',
-        update: 'Edicion',
-        activate: 'Activacion',
-        deactivate: 'Desactivacion',
-        reset_password: 'Recuperacion'
+        update: 'Edición',
+        delete: 'Baja',
+        activate: 'Activación',
+        deactivate: 'Desactivación',
+        reset_password: 'Recuperación'
+    };
+
+    const MODULE_LABELS = {
+        user_accounts: 'Usuarios y cuentas',
+        sample_registry: 'Registro de muestras y barrenos'
     };
 
     class AuditLogPage {
@@ -23,6 +29,7 @@
                 auditCount: document.getElementById('auditCount'),
                 auditPagination: document.getElementById('auditPagination'),
                 auditActionFilter: document.getElementById('auditActionFilter'),
+                auditModuleFilter: document.getElementById('auditModuleFilter'),
                 auditUserFilter: document.getElementById('auditUserFilter'),
                 auditDateFilter: document.getElementById('auditDateFilter'),
                 clearAuditFilters: document.getElementById('clearAuditFilters')
@@ -42,6 +49,7 @@
 
         bindEvents() {
             this.elements.auditActionFilter.addEventListener('change', () => this.applyFilters());
+            this.elements.auditModuleFilter?.addEventListener('change', () => this.applyFilters());
             this.elements.auditUserFilter.addEventListener('input', () => this.applyFilters());
             this.elements.auditDateFilter.addEventListener('change', () => this.applyFilters());
             this.elements.clearAuditFilters.addEventListener('click', () => this.clearFilters());
@@ -55,6 +63,9 @@
 
         clearFilters() {
             this.elements.auditActionFilter.value = '';
+            if (this.elements.auditModuleFilter) {
+                this.elements.auditModuleFilter.value = '';
+            }
             this.elements.auditUserFilter.value = '';
             this.elements.auditDateFilter.value = '';
             this.applyFilters();
@@ -74,38 +85,40 @@
         }
 
         async loadAuditLog() {
-            this.setMessage('Cargando bitacora...', 'info');
+            this.setMessage('Cargando bitácora...', 'info');
 
             try {
                 const { config, headers } = this.getHeaders();
-                const response = await fetch(`${config.url}/rest/v1/audit_log?select=id,created_at,user_name,user_role,module,action,entity_type,entity_id,entity_label,view_name,status,before_data,after_data,metadata&module=eq.user_accounts&order=created_at.desc&limit=250`, { headers });
+                const response = await fetch(`${config.url}/rest/v1/audit_log?select=id,created_at,user_name,user_role,module,action,entity_type,entity_id,entity_label,view_name,status,before_data,after_data,metadata&order=created_at.desc&limit=500`, { headers });
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data?.message || 'No fue posible cargar la bitacora.');
+                    throw new Error(data?.message || 'No fue posible cargar la bitácora.');
                 }
 
                 this.state.auditLogs = Array.isArray(data) ? data : [];
                 this.state.currentPage = 1;
                 this.renderAuditTable();
                 this.renderPagination();
-                this.setMessage('Bitacora lista.', 'success');
+                this.setMessage('Bitácora lista.', 'success');
             } catch (error) {
-                this.setMessage(error.message || 'No fue posible cargar la bitacora.', 'error');
+                this.setMessage(error.message || 'No fue posible cargar la bitácora.', 'error');
             }
         }
 
         getFilteredAuditLogs() {
             const actionFilter = this.elements.auditActionFilter.value.trim();
+            const moduleFilter = this.elements.auditModuleFilter?.value.trim() || '';
             const userFilter = this.elements.auditUserFilter.value.trim().toLowerCase();
             const dateFilter = this.elements.auditDateFilter.value;
 
             return this.state.auditLogs.filter((entry) => {
                 const matchesAction = !actionFilter || entry.action === actionFilter;
+                const matchesModule = !moduleFilter || entry.module === moduleFilter;
                 const actor = `${entry.user_name || ''} ${entry.entity_label || ''}`.toLowerCase();
                 const matchesUser = !userFilter || actor.includes(userFilter);
                 const matchesDate = !dateFilter || (entry.created_at || '').startsWith(dateFilter);
-                return matchesAction && matchesUser && matchesDate;
+                return matchesAction && matchesModule && matchesUser && matchesDate;
             });
         }
 
@@ -144,7 +157,7 @@
                 <tr>
                     <td>
                         <div class="user-primary">${this.formatDate(entry.created_at)}</div>
-                        <div class="audit-muted">${this.escapeHtml(entry.view_name || 'dashboard.html')}</div>
+                        <div class="audit-muted">${this.escapeHtml(this.getModuleLabel(entry.module))} · ${this.escapeHtml(entry.view_name || 'dashboard.html')}</div>
                     </td>
                     <td>
                         <div class="user-primary">${this.escapeHtml(entry.user_name || 'Sin usuario')}</div>
@@ -294,6 +307,10 @@
 
         getActionLabel(action) {
             return ACTION_LABELS[action] || action;
+        }
+
+        getModuleLabel(module) {
+            return MODULE_LABELS[module] || module || 'Módulo no especificado';
         }
 
         getStatusLabel(status) {

@@ -17,6 +17,21 @@ as $$
     );
 $$;
 
+create or replace function public.current_user_can_manage_owned_registry(owner_user_id uuid)
+returns boolean
+language sql
+stable
+as $$
+    select exists (
+        select 1
+        from public.usuarios
+        where id = auth.uid()
+          and activo = true
+          and (rol = 'admin' or id = owner_user_id)
+    );
+$$;
+
+
 create table if not exists public.barrenos (
     id text primary key,
     proyecto text not null,
@@ -55,6 +70,8 @@ create table if not exists public.barrenos (
     tcr numeric(8, 4),
     intervalos_interes text,
     archivo_descripcion_nucleo text,
+    archivo_descripcion_bucket text,
+    archivo_descripcion_path text,
     observaciones text,
     constraint barrenos_fecha_valida check (fecha_fin >= fecha_inicio),
     constraint barrenos_latitud_range check (latitud >= 14.0 and latitud <= 33.0),
@@ -185,6 +202,74 @@ create index if not exists idx_muestras_fuente_origen on public.muestras (fuente
 create index if not exists idx_muestras_barreno on public.muestras (referencia_barreno_id, referencia_intervalo_id);
 create index if not exists idx_muestra_fotos_muestra on public.muestra_fotos (muestra_id);
 
+do $$
+begin
+    if to_regclass('public.audit_log') is not null then
+        execute 'alter table public.audit_log enable row level security';
+        execute 'drop policy if exists "audit_log_registry_insert" on public.audit_log';
+        execute $policy$
+            create policy "audit_log_registry_insert"
+            on public.audit_log
+            for insert
+            to authenticated
+            with check (
+                public.current_user_can_use_sample_registry()
+                and module = 'sample_registry'
+                and action in ('create', 'update', 'delete')
+            )
+        $policy$;
+    end if;
+end $$;
+
+insert into storage.buckets (id, name, public)
+values ('barreno-anexos', 'barreno-anexos', false)
+on conflict (id) do nothing;
+
+drop policy if exists "barreno_anexos_select" on storage.objects;
+drop policy if exists "barreno_anexos_insert" on storage.objects;
+drop policy if exists "barreno_anexos_update" on storage.objects;
+drop policy if exists "barreno_anexos_delete" on storage.objects;
+
+create policy "barreno_anexos_select"
+on storage.objects
+for select
+to authenticated
+using (
+    bucket_id = 'barreno-anexos'
+    and public.current_user_can_use_sample_registry()
+);
+
+create policy "barreno_anexos_insert"
+on storage.objects
+for insert
+to authenticated
+with check (
+    bucket_id = 'barreno-anexos'
+    and public.current_user_can_use_sample_registry()
+);
+
+create policy "barreno_anexos_update"
+on storage.objects
+for update
+to authenticated
+using (
+    bucket_id = 'barreno-anexos'
+    and public.current_user_can_use_sample_registry()
+)
+with check (
+    bucket_id = 'barreno-anexos'
+    and public.current_user_can_use_sample_registry()
+);
+
+create policy "barreno_anexos_delete"
+on storage.objects
+for delete
+to authenticated
+using (
+    bucket_id = 'barreno-anexos'
+    and public.current_user_can_use_sample_registry()
+);
+
 alter table public.barrenos enable row level security;
 alter table public.barreno_intervalos enable row level security;
 alter table public.muestras enable row level security;
@@ -209,8 +294,15 @@ create policy "barrenos_update_registry_users"
 on public.barrenos
 for update
 to authenticated
-using (public.current_user_can_use_sample_registry())
+using (public.current_user_can_manage_owned_registry(created_by))
 with check (public.current_user_can_use_sample_registry());
+
+drop policy if exists "barrenos_delete_registry_users" on public.barrenos;
+create policy "barrenos_delete_registry_users"
+on public.barrenos
+for delete
+to authenticated
+using (public.current_user_can_manage_owned_registry(created_by));
 
 drop policy if exists "barreno_intervalos_select_registry_users" on public.barreno_intervalos;
 create policy "barreno_intervalos_select_registry_users"
@@ -231,8 +323,15 @@ create policy "barreno_intervalos_update_registry_users"
 on public.barreno_intervalos
 for update
 to authenticated
-using (public.current_user_can_use_sample_registry())
+using (public.current_user_can_manage_owned_registry(created_by))
 with check (public.current_user_can_use_sample_registry());
+
+drop policy if exists "barreno_intervalos_delete_registry_users" on public.barreno_intervalos;
+create policy "barreno_intervalos_delete_registry_users"
+on public.barreno_intervalos
+for delete
+to authenticated
+using (public.current_user_can_manage_owned_registry(created_by));
 
 drop policy if exists "muestras_select_registry_users" on public.muestras;
 create policy "muestras_select_registry_users"
@@ -269,4 +368,9 @@ on public.muestra_fotos
 for insert
 to authenticated
 with check (public.current_user_can_use_sample_registry());
+
+
+
+
+
 

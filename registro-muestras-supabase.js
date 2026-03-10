@@ -1,6 +1,7 @@
 (function () {
     const STORAGE_BARRENOS = "siil_catalogo_barrenos_v1";
     const STORAGE_MUESTRAS = "siil_catalogo_muestras_v1";
+    const BARRENO_STORAGE_BUCKET = "barreno-anexos";
 
     const muestraWizard = document.getElementById("muestraWizard");
     const barrenoWizard = document.getElementById("barrenoWizard");
@@ -54,7 +55,7 @@
 
     const INSTITUCIONES = ["Unison", "SGM", "LitioMx", "Otro"];
     const PROJECT_OPTIONS = ["SEFMP.31"];
-    const LITOLOGIAS = ["Igneas", "Sedimentarias", "Metamorficas", "Otra"];
+    const LITOLOGIAS = ["Ígneas", "Sedimentarias", "Metamórficas", "Otra"];
     const COLORES_MUESTRA = ["Blanco", "Gris", "Cafe", "Rojo", "Verde", "Negro", "Amarillo", "Otro"];
     const TEXTURAS_MUESTRA = ["Masiva", "Laminada", "Fisurada", "Bioturbada", "Brechoide", "Otra"];
     const ESTRUCTURAS_MUESTRA = ["Fracturas rellenas", "Vetas de yeso", "Nodulos de carbonato", "Otra"];
@@ -65,7 +66,7 @@
     const SAMPLE_ROLE_COPY = {
         admin: {
             badge: "Perfil admin",
-            intro: "Administre el catalogo operativo y la trazabilidad de muestras.",
+            intro: "Administre el catálogo operativo y la trazabilidad de muestras.",
             summary: "Puede crear, editar, revisar y validar registros."
         },
         coordinador: {
@@ -75,12 +76,12 @@
         },
         operador_campo: {
             badge: "Perfil operativo",
-            intro: "Capture muestras y consulte el catalogo de trabajo del equipo.",
+            intro: "Capture muestras y consulte el catálogo de trabajo del equipo.",
             summary: "Puede crear y actualizar registros en captura."
         },
         default: {
             badge: "Perfil consulta",
-            intro: "Consulta operativa del catalogo de muestras.",
+            intro: "Consulta operativa del catálogo de muestras.",
             summary: "Sin permisos de captura; la vista queda en modo consulta."
         }
     };
@@ -121,7 +122,7 @@
     const SAMPLE_STATUS_LABELS = {
         borrador: "Borrador",
         captura_abierta: "Captura abierta",
-        en_revision: "En revision",
+        en_revision: "En revisión",
         validado: "Validado",
         corregido: "Corregido",
         cancelado: "Cancelado",
@@ -145,6 +146,12 @@
         requestedView: "muestras",
         barrenoView: "form",
         selectedBarrenoId: null,
+        editingBarrenoId: null,
+        barrenoPage: 1,
+        barrenoPageSize: 10,
+        barrenoArchivoDescripcionActual: "",
+        barrenoArchivoDescripcionBucketActual: "",
+        barrenoArchivoDescripcionPathActual: "",
         data: {
             correo: "",
             nombreRegistro: "",
@@ -209,6 +216,113 @@
         return Boolean(getSupabaseConfig() && getAccessToken());
     }
 
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function sanitizeStorageFileName(fileName) {
+        return String(fileName || "anexo")
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .replace(/[^A-Za-z0-9._-]+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "") || "anexo";
+    }
+
+    function buildStorageObjectUrl(bucket, objectPath) {
+        const config = getSupabaseConfig();
+        if (!config || !bucket || !objectPath) {
+            throw new Error("No fue posible resolver la ruta del archivo en Storage.");
+        }
+        const encodedPath = String(objectPath)
+            .split("/")
+            .filter(Boolean)
+            .map((segment) => encodeURIComponent(segment))
+            .join("/");
+        return `${config.url}/storage/v1/object/${encodeURIComponent(bucket)}/${encodedPath}`;
+    }
+
+    async function uploadBarrenoAttachment(recordId, file) {
+        const config = getSupabaseConfig();
+        const accessToken = getAccessToken();
+        if (!config || !accessToken) {
+            throw new Error("No hay una sesión válida para cargar anexos en Supabase.");
+        }
+        if (!recordId || !file) {
+            throw new Error("No fue posible preparar el archivo del barreno.");
+        }
+        const sanitizedName = sanitizeStorageFileName(file.name);
+        const objectPath = `${sanitizeStorageFileName(recordId)}/${Date.now()}-${sanitizedName}`;
+        const response = await fetch(buildStorageObjectUrl(BARRENO_STORAGE_BUCKET, objectPath), {
+            method: "POST",
+            headers: {
+                apikey: config.anonKey,
+                Authorization: `Bearer ${accessToken}`,
+                "x-upsert": "true",
+                "Content-Type": file.type || "application/octet-stream"
+            },
+            body: file
+        });
+
+        if (!response.ok) {
+            let detail = "No fue posible cargar el archivo de descripción del núcleo.";
+            try {
+                const payload = await response.json();
+                detail = payload?.message || payload?.error || detail;
+            } catch {}
+            throw new Error(detail);
+        }
+
+        return {
+            fileName: file.name,
+            bucket: BARRENO_STORAGE_BUCKET,
+            path: objectPath
+        };
+    }
+
+    async function downloadBarrenoAttachment(record) {
+        const config = getSupabaseConfig();
+        const accessToken = getAccessToken();
+        if (!config || !accessToken) {
+            throw new Error("No hay una sesión válida para descargar anexos.");
+        }
+        if (!record?.archivoDescripcionBucket || !record?.archivoDescripcionPath) {
+            throw new Error("Este barreno no tiene un archivo descargable en Storage.");
+        }
+
+        const response = await fetch(buildStorageObjectUrl(record.archivoDescripcionBucket, record.archivoDescripcionPath), {
+            method: "GET",
+            headers: {
+                apikey: config.anonKey,
+                Authorization: `Bearer ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            let detail = "No fue posible descargar el archivo adjunto del barreno.";
+            try {
+                const payload = await response.json();
+                detail = payload?.message || payload?.error || detail;
+            } catch {}
+            throw new Error(detail);
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = objectUrl;
+        anchor.download = record.archivoDescripcion || "anexo-barreno";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(objectUrl);
+    }
+
     async function supabaseRequest(path, options = {}) {
         const config = getSupabaseConfig();
         const accessToken = getAccessToken();
@@ -237,7 +351,7 @@
 
             const payload = await response.json().catch(() => null);
             if (!response.ok) {
-                const message = payload?.message || payload?.error_description || payload?.hint || "No fue posible completar la operacion con Supabase.";
+                const message = payload?.message || payload?.error_description || payload?.hint || "No fue posible completar la operación con Supabase.";
                 throw new Error(message);
             }
 
@@ -273,8 +387,12 @@
         return municipios.map((municipio) => municipio.nombre);
     }
 
+    function getBarrenoSelectableRecords() {
+        return state.barrenos.filter((barreno) => getBarrenoStatus(barreno).key !== "draft");
+    }
+
     function getBarrenoOptions() {
-        return state.barrenos.map((barreno) => barreno.id);
+        return getBarrenoSelectableRecords().map((barreno) => barreno.id);
     }
 
     function getSelectedBarreno() {
@@ -293,7 +411,7 @@
     }
 
     function hasAvailableBarrenos() {
-        return Array.isArray(state.barrenos) && state.barrenos.length > 0;
+        return getBarrenoSelectableRecords().length > 0;
     }
 
     function syncBarrenoAvailability() {
@@ -307,11 +425,11 @@
             return;
         }
 
-        if (!hasAvailableBarrenos() && state.data.origenArcilla === "Profundidad (Nucleo)") {
+        if (!hasAvailableBarrenos() && state.data.origenArcilla === "Profundidad (Núcleo)") {
             state.data.origenArcilla = "Superficie";
         }
 
-        if (state.data.origenArcilla !== "Profundidad (Nucleo)") {
+        if (state.data.origenArcilla !== "Profundidad (Núcleo)") {
             state.data.arcilla_barreno_id = "";
             state.data.arcilla_intervalo_id = "";
             state.data.arcilla_desde = "";
@@ -330,7 +448,7 @@
 
     function syncSampleLocationFromSelectedBarreno() {
         const barreno = getSelectedBarreno();
-        if (!barreno || state.data.origenArcilla !== "Profundidad (Nucleo)") {
+        if (!barreno || state.data.origenArcilla !== "Profundidad (Núcleo)") {
             return;
         }
         state.data.estado = barreno.estado || state.data.estado;
@@ -340,7 +458,7 @@
 
     function isBarrenoBoundLocationField(fieldKey) {
         return state.data.fuente === "Arcillas"
-            && state.data.origenArcilla === "Profundidad (Nucleo)"
+            && state.data.origenArcilla === "Profundidad (Núcleo)"
             && Boolean(state.data.arcilla_barreno_id)
             && ["estado", "municipio", "localidad"].includes(fieldKey);
     }
@@ -349,11 +467,72 @@
         localStorage.setItem(STORAGE_BARRENOS, JSON.stringify(state.barrenos));
     }
 
+    function normalizeBarrenoRecord(entry) {
+        if (!entry?.id) {
+            return null;
+        }
+        const intervalos = Array.isArray(entry.intervalos)
+            ? entry.intervalos
+            : Array.isArray(entry.barreno_intervalos)
+                ? entry.barreno_intervalos
+                : [];
+
+        return {
+            ...entry,
+            proyecto: entry.proyecto || "SEFMP.31",
+            subregionSigla: entry.subregionSigla || entry.subregion_sigla || "",
+            perforista: entry.perforista || "",
+            responsable: entry.responsable || "",
+            responsableDescripcion: entry.responsableDescripcion || entry.responsable_descripcion || "",
+            estado: entry.estado || "",
+            municipio: entry.municipio || "",
+            localidad: entry.localidad || "",
+            descripcionLocal: entry.descripcionLocal || entry.descripcion_local || "",
+            litologiaLocal: entry.litologiaLocal || entry.litologia_local || "",
+            estructuraAledana: entry.estructuraAledana || entry.estructura_aledana || "",
+            anomaliaGravimetrica: numberOrNull(entry.anomaliaGravimetrica ?? entry.anomalia_gravimetrica),
+            anomalia1: entry.anomalia1 || entry.anomalia_1 || "",
+            anomalia2: entry.anomalia2 || entry.anomalia_2 || "",
+            anomalia3: entry.anomalia3 || entry.anomalia_3 || "",
+            accesibilidad: entry.accesibilidad || "",
+            tipoTerreno: entry.tipoTerreno || entry.tipo_terreno || "",
+            latitud: numberOrNull(entry.latitud),
+            longitud: numberOrNull(entry.longitud),
+            altitud: numberOrNull(entry.altitud),
+            azimut: numberOrNull(entry.azimut),
+            inclinacion: numberOrNull(entry.inclinacion),
+            tipoBarrenacion: entry.tipoBarrenacion || entry.tipo_barrenacion || "",
+            fechaInicio: entry.fechaInicio || entry.fecha_inicio || "",
+            fechaFin: entry.fechaFin || entry.fecha_fin || "",
+            longitudPerforada: numberOrNull(entry.longitudPerforada ?? entry.longitud_perforada),
+            longitudRecuperada: numberOrNull(entry.longitudRecuperada ?? entry.longitud_recuperada),
+            diametroMm: numberOrNull(entry.diametroMm ?? entry.diametro_mm),
+            numeroCajas: numberOrNull(entry.numeroCajas ?? entry.numero_cajas),
+            nombreCajas: entry.nombreCajas || entry.nombre_cajas || "",
+            rqd: entry.rqd || "",
+            tcr: numberOrNull(entry.tcr),
+            intervalosInteres: entry.intervalosInteres || entry.intervalos_interes || "",
+            archivoDescripcion: entry.archivoDescripcion || entry.archivo_descripcion_nucleo || "",
+            observaciones: entry.observaciones || "",
+            createdById: entry.createdById || entry.created_by || null,
+            createdByEmail: entry.createdByEmail || entry.created_by_email || state.currentUser?.email || "",
+            createdAt: entry.createdAt || entry.created_at || new Date().toISOString(),
+            updatedAt: entry.updatedAt || entry.updated_at || entry.createdAt || entry.created_at || new Date().toISOString(),
+            archivoDescripcionBucket: entry.archivoDescripcionBucket || entry.archivo_descripcion_bucket || "",
+            archivoDescripcionPath: entry.archivoDescripcionPath || entry.archivo_descripcion_path || "",
+            intervalos: intervalos.map((intervalo, index) => ({
+                id: intervalo.id || intervalo.intervalo_id || `INT-${String(index + 1).padStart(2, "0")}`,
+                desde: numberOrNull(intervalo.desde),
+                hasta: numberOrNull(intervalo.hasta)
+            }))
+        };
+    }
+
     function loadLocalBarrenosCatalog() {
         try {
             const raw = localStorage.getItem(STORAGE_BARRENOS);
             const parsed = raw ? JSON.parse(raw) : [];
-            state.barrenos = Array.isArray(parsed) ? parsed : [];
+            state.barrenos = (Array.isArray(parsed) ? parsed : []).map(normalizeBarrenoRecord).filter(Boolean);
         } catch {
             state.barrenos = [];
         }
@@ -368,9 +547,9 @@
         }
 
         try {
-            const rows = await supabaseRequest("barrenos?select=id,proyecto,subregion_sigla,perforista,responsable,responsable_descripcion,estado,estado_cve,municipio,municipio_cve,localidad,descripcion_local,litologia_local,estructura_aledana,anomalia_gravimetrica,anomalia_1,anomalia_2,anomalia_3,accesibilidad,tipo_terreno,latitud,longitud,altitud,azimut,inclinacion,tipo_barrenacion,fecha_inicio,fecha_fin,longitud_perforada,longitud_recuperada,diametro_mm,numero_cajas,nombre_cajas,rqd,tcr,intervalos_interes,archivo_descripcion_nucleo,observaciones,barreno_intervalos(intervalo_id,desde,hasta,orden)&order=created_at.desc");
+            const rows = await supabaseRequest("barrenos?select=id,proyecto,subregion_sigla,perforista,responsable,responsable_descripcion,estado,estado_cve,municipio,municipio_cve,localidad,descripcion_local,litologia_local,estructura_aledana,anomalia_gravimetrica,anomalia_1,anomalia_2,anomalia_3,accesibilidad,tipo_terreno,latitud,longitud,altitud,azimut,inclinacion,tipo_barrenacion,fecha_inicio,fecha_fin,longitud_perforada,longitud_recuperada,diametro_mm,numero_cajas,nombre_cajas,rqd,tcr,intervalos_interes,archivo_descripcion_nucleo,archivo_descripcion_bucket,archivo_descripcion_path,observaciones,created_by,created_at,updated_at,barreno_intervalos(intervalo_id,desde,hasta,orden)&order=created_at.desc");
             state.barrenos = Array.isArray(rows)
-                ? rows.map((row) => ({
+                ? rows.map((row) => normalizeBarrenoRecord({
                     id: row.id,
                     proyecto: row.proyecto,
                     subregionSigla: row.subregion_sigla || "",
@@ -406,15 +585,22 @@
                     tcr: Number(row.tcr),
                     intervalosInteres: row.intervalos_interes || "",
                     archivoDescripcion: row.archivo_descripcion_nucleo || "",
+                    archivoDescripcionBucket: row.archivo_descripcion_bucket || "",
+                    archivoDescripcionPath: row.archivo_descripcion_path || "",
                     observaciones: row.observaciones || "",
+                    createdById: row.created_by || null,
+                    createdAt: row.created_at || new Date().toISOString(),
+                    updatedAt: row.updated_at || row.created_at || new Date().toISOString(),
                     intervalos: Array.isArray(row.barreno_intervalos)
-                        ? row.barreno_intervalos.sort((a, b) => Number(a.orden || 0) - Number(b.orden || 0)).map((intervalo) => ({
-                            id: intervalo.intervalo_id,
-                            desde: Number(intervalo.desde),
-                            hasta: Number(intervalo.hasta)
-                        }))
+                        ? row.barreno_intervalos
+                            .sort((a, b) => Number(a.orden || 0) - Number(b.orden || 0))
+                            .map((intervalo) => ({
+                                id: intervalo.intervalo_id,
+                                desde: Number(intervalo.desde),
+                                hasta: Number(intervalo.hasta)
+                            }))
                         : []
-                }))
+                })).filter(Boolean)
                 : [];
             persistLocalBarrenosCatalog();
             state.persistence = "supabase";
@@ -560,7 +746,7 @@
         const labels = {
             view: "Ver",
             edit: "Editar",
-            send_review: "Enviar a revision",
+            send_review: "Enviar a revisión",
             validate: "Validar",
             correct: "Marcar correccion",
             cancel: "Cancelar",
@@ -627,6 +813,121 @@
         return state.barrenos.find((barreno) => barreno.id === state.selectedBarrenoId) || state.barrenos[0] || null;
     }
 
+    function hasBarrenoSamplingMinimum(record) {
+        if (!record) return false;
+        const hasIntervals = Array.isArray(record.intervalos)
+            && record.intervalos.length > 0
+            && record.intervalos.every((intervalo) => Number.isFinite(intervalo.desde) && Number.isFinite(intervalo.hasta) && intervalo.hasta > intervalo.desde);
+        return Boolean(
+            record.id
+            && record.estado
+            && record.municipio
+            && record.responsable
+            && record.tipoBarrenacion
+            && Number.isFinite(record.latitud)
+            && Number.isFinite(record.longitud)
+            && Number.isFinite(record.longitudPerforada)
+            && record.longitudPerforada > 0
+            && hasIntervals
+        );
+    }
+
+    function getBarrenoStatus(record) {
+        const hasMinimum = hasBarrenoSamplingMinimum(record);
+        const hasFile = Boolean(record?.archivoDescripcion);
+        const hasCoreDocument = Boolean(record?.rqd && record?.observaciones);
+
+        if (!hasMinimum) {
+            return { key: "draft", label: "Borrador", classes: "bg-slate-100 text-slate-700" };
+        }
+        if (!hasFile) {
+            return { key: "document_pending", label: "Pendiente documental", classes: "bg-amber-100 text-amber-800" };
+        }
+        if (!hasCoreDocument) {
+            return { key: "ready", label: "Disponible para muestreo", classes: "bg-sky-100 text-sky-700" };
+        }
+        return { key: "complete", label: "Completo", classes: "bg-emerald-100 text-emerald-700" };
+    }
+
+    function getCurrentUserDisplayName() {
+        return state.currentUser?.name || state.currentUser?.email || "Usuario SIIL";
+    }
+
+    function buildBarrenoAuditSnapshot(record) {
+        if (!record) return null;
+        const status = getBarrenoStatus(record);
+        return {
+            id: record.id,
+            proyecto: record.proyecto || "",
+            subregion_sigla: record.subregionSigla || "",
+            perforista: record.perforista || "",
+            responsable: record.responsable || "",
+            estado: record.estado || "",
+            municipio: record.municipio || "",
+            localidad: record.localidad || "",
+            tipo_barrenacion: record.tipoBarrenacion || "",
+            longitud_perforada: Number.isFinite(record.longitudPerforada) ? record.longitudPerforada : null,
+            longitud_recuperada: Number.isFinite(record.longitudRecuperada) ? record.longitudRecuperada : null,
+            tcr: Number.isFinite(record.tcr) ? record.tcr : null,
+            rqd: record.rqd || "",
+            archivo_descripcion_nucleo: record.archivoDescripcion || "",
+            intervalos: Array.isArray(record.intervalos) ? record.intervalos.map((intervalo) => ({ id: intervalo.id, desde: intervalo.desde, hasta: intervalo.hasta })) : [],
+            estado_operativo: status.label
+        };
+    }
+
+    async function writeRegistryAuditLog(action, entityType, entityId, entityLabel, beforeData, afterData, metadata = {}) {
+        if (!canUseSupabase()) {
+            return false;
+        }
+        try {
+            await supabaseRequest("audit_log", {
+                method: "POST",
+                headers: { Prefer: "return=minimal" },
+                body: {
+                    user_id: state.currentUser?.id || null,
+                    user_name: getCurrentUserDisplayName(),
+                    user_role: getCurrentRole(),
+                    module: "sample_registry",
+                    action,
+                    entity_type: entityType,
+                    entity_id: entityId || null,
+                    entity_label: entityLabel || entityId || null,
+                    view_name: "registro-muestras.html",
+                    status: metadata.status || "success",
+                    before_data: beforeData,
+                    after_data: afterData,
+                    metadata
+                }
+            });
+            return true;
+        } catch (_error) {
+            return false;
+        }
+    }
+
+    function canManageBarreno(record) {
+        if (!record) return false;
+        if (getCurrentRole() === "admin") return true;
+        if (state.currentUser?.id && record.createdById && state.currentUser.id === record.createdById) return true;
+        if (state.currentUser?.email && record.createdByEmail && state.currentUser.email === record.createdByEmail) return true;
+        return false;
+    }
+
+    function getPagedBarrenos() {
+        const pageSize = Number.isFinite(Number(state.barrenoPageSize)) && Number(state.barrenoPageSize) > 0 ? Number(state.barrenoPageSize) : 10;
+        const currentPage = Number.isFinite(Number(state.barrenoPage)) && Number(state.barrenoPage) > 0 ? Number(state.barrenoPage) : 1;
+        const totalPages = Math.max(1, Math.ceil(state.barrenos.length / pageSize));
+        state.barrenoPage = Math.min(Math.max(currentPage, 1), totalPages);
+        state.barrenoPageSize = pageSize;
+        const start = (state.barrenoPage - 1) * pageSize;
+        return {
+            totalPages,
+            start,
+            items: state.barrenos.slice(start, start + pageSize)
+        };
+    }
+
     function renderBarrenoDetail() {
         if (!barrenoDetailContent) return;
         const barreno = getSelectedBarrenoDetail();
@@ -637,67 +938,111 @@
         const intervalosHtml = barreno.intervalos.length > 0
             ? barreno.intervalos.map((intervalo) => `<li>${intervalo.id}: ${intervalo.desde} a ${intervalo.hasta} m</li>`).join("")
             : "<li>Sin intervalos registrados.</li>";
+        const hasDownloadableAttachment = Boolean(barreno.archivoDescripcionBucket && barreno.archivoDescripcionPath);
         const archivoHtml = barreno.archivoDescripcion
-            ? `<div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">Archivo registrado: <span class="font-semibold">${barreno.archivoDescripcion}</span></div>`
-            : `<div class="rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500">No hay archivo de descripcion del nucleo adjunto.</div>`;
+            ? `
+                <div class="rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700">
+                    <div>Archivo registrado: <span class="font-semibold">${escapeHtml(barreno.archivoDescripcion)}</span></div>
+                    ${hasDownloadableAttachment
+                        ? '<button type="button" data-barreno-download class="mt-3 inline-flex items-center rounded-lg bg-[#8f2347] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#741c39]">Descargar archivo</button>'
+                        : '<div class="mt-2 text-xs text-amber-700">El nombre del archivo está registrado, pero aún no tiene respaldo descargable en Storage.</div>'}
+                </div>`
+            : `<div class="rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500">No hay archivo de descripción del núcleo adjunto.</div>`;
         barrenoDetailContent.innerHTML = `
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div class="rounded-lg border border-slate-200 bg-white p-4">
-                    <div class="mb-2 text-base font-bold text-slate-800">${barreno.id}</div>
+                    <div class="mb-2 flex flex-wrap items-center gap-2">
+                        <div class="text-base font-bold text-slate-800">${barreno.id}</div>
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${getBarrenoStatus(barreno).classes}">${getBarrenoStatus(barreno).label}</span>
+                    </div>
                     <div class="space-y-1 text-sm text-slate-600">
                         <div><span class="font-semibold text-slate-700">Proyecto:</span> ${barreno.proyecto || "Sin dato"}</div>
-                        <div><span class="font-semibold text-slate-700">Subregion:</span> ${barreno.subregionSigla || "Sin dato"}</div>
+                        <div><span class="font-semibold text-slate-700">Subregión:</span> ${barreno.subregionSigla || "Sin dato"}</div>
                         <div><span class="font-semibold text-slate-700">Perforista:</span> ${barreno.perforista || "Sin dato"}</div>
                         <div><span class="font-semibold text-slate-700">Responsable:</span> ${barreno.responsable || "Sin dato"}</div>
-                        <div><span class="font-semibold text-slate-700">Ubicacion:</span> ${barreno.estado || "-"} / ${barreno.municipio || "-"} / ${barreno.localidad || "Sin localidad"}</div>
+                        <div><span class="font-semibold text-slate-700">Ubicación:</span> ${barreno.estado || "-"} / ${barreno.municipio || "-"} / ${barreno.localidad || "Sin localidad"}</div>
                         <div><span class="font-semibold text-slate-700">Coordenadas:</span> ${Number.isFinite(barreno.latitud) ? barreno.latitud : "-"}, ${Number.isFinite(barreno.longitud) ? barreno.longitud : "-"}</div>
                         <div><span class="font-semibold text-slate-700">Altitud:</span> ${Number.isFinite(barreno.altitud) ? barreno.altitud : "-"} msnm</div>
-                        <div><span class="font-semibold text-slate-700">Fechas:</span> ${barreno.fechaInicio || "-"} a ${barreno.fechaFin || "-"}</div>
+                        <div><span class="font-semibold text-slate-700">Actualizado:</span> ${new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeStyle: "short" }).format(new Date(barreno.updatedAt || barreno.createdAt))}</div>
                     </div>
                 </div>
                 <div class="rounded-lg border border-slate-200 bg-white p-4">
-                    <div class="mb-2 text-sm font-bold uppercase tracking-[0.14em] text-slate-500">Geometria y nucleo</div>
+                    <div class="mb-2 text-sm font-bold uppercase tracking-[0.14em] text-slate-500">Geometría y núcleo</div>
                     <div class="space-y-1 text-sm text-slate-600">
-                        <div><span class="font-semibold text-slate-700">Tipo de barrenacion:</span> ${barreno.tipoBarrenacion || "Sin dato"}</div>
+                        <div><span class="font-semibold text-slate-700">Tipo de barrenación:</span> ${barreno.tipoBarrenacion || "Sin dato"}</div>
                         <div><span class="font-semibold text-slate-700">Longitud perforada:</span> ${Number.isFinite(barreno.longitudPerforada) ? barreno.longitudPerforada : "-"} m</div>
                         <div><span class="font-semibold text-slate-700">Longitud recuperada:</span> ${Number.isFinite(barreno.longitudRecuperada) ? barreno.longitudRecuperada : "-"} m</div>
                         <div><span class="font-semibold text-slate-700">TCR:</span> ${Number.isFinite(barreno.tcr) ? barreno.tcr.toFixed(4) : "-"}</div>
                         <div><span class="font-semibold text-slate-700">RQD:</span> ${barreno.rqd || "Sin dato"}</div>
-                        <div><span class="font-semibold text-slate-700">Diametro:</span> ${Number.isFinite(barreno.diametroMm) ? barreno.diametroMm : "-"} mm</div>
+                        <div><span class="font-semibold text-slate-700">Diámetro:</span> ${Number.isFinite(barreno.diametroMm) ? barreno.diametroMm : "-"} mm</div>
                         <div><span class="font-semibold text-slate-700">Cajas:</span> ${Number.isFinite(barreno.numeroCajas) ? barreno.numeroCajas : "-"} · ${barreno.nombreCajas || "Sin dato"}</div>
-                        <div><span class="font-semibold text-slate-700">Azimut/Inclinacion:</span> ${Number.isFinite(barreno.azimut) ? barreno.azimut : "-"} / ${Number.isFinite(barreno.inclinacion) ? barreno.inclinacion : "-"}</div>
+                        <div><span class="font-semibold text-slate-700">Azimut/Inclinación:</span> ${Number.isFinite(barreno.azimut) ? barreno.azimut : "-"} / ${Number.isFinite(barreno.inclinacion) ? barreno.inclinacion : "-"}</div>
                     </div>
                 </div>
                 <div class="rounded-lg border border-slate-200 bg-white p-4 md:col-span-2">
-                    <div class="mb-2 text-sm font-bold uppercase tracking-[0.14em] text-slate-500">Contexto geologico</div>
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 text-sm text-slate-600">
-                        <div><span class="font-semibold text-slate-700">Descripcion local:</span> ${barreno.descripcionLocal || "Sin dato"}</div>
-                        <div><span class="font-semibold text-slate-700">Litologia local:</span> ${barreno.litologiaLocal || "Sin dato"}</div>
+                    <div class="mb-2 text-sm font-bold uppercase tracking-[0.14em] text-slate-500">Contexto geológico</div>
+                    <div class="grid grid-cols-1 gap-3 text-sm text-slate-600 md:grid-cols-2">
+                        <div><span class="font-semibold text-slate-700">Descripción local:</span> ${barreno.descripcionLocal || "Sin dato"}</div>
+                        <div><span class="font-semibold text-slate-700">Litología local:</span> ${barreno.litologiaLocal || "Sin dato"}</div>
                         <div><span class="font-semibold text-slate-700">Estructura aledana:</span> ${barreno.estructuraAledana || "Sin dato"}</div>
                         <div><span class="font-semibold text-slate-700">Accesibilidad:</span> ${barreno.accesibilidad || "Sin dato"}</div>
                         <div><span class="font-semibold text-slate-700">Tipo de terreno:</span> ${barreno.tipoTerreno || "Sin dato"}</div>
-                        <div><span class="font-semibold text-slate-700">Anomalia gravimetrica:</span> ${Number.isFinite(barreno.anomaliaGravimetrica) ? barreno.anomaliaGravimetrica : "Sin dato"}</div>
-                        <div><span class="font-semibold text-slate-700">Anomalia 1:</span> ${barreno.anomalia1 || "Sin dato"}</div>
-                        <div><span class="font-semibold text-slate-700">Anomalia 2:</span> ${barreno.anomalia2 || "Sin dato"}</div>
-                        <div class="md:col-span-2"><span class="font-semibold text-slate-700">Anomalia 3:</span> ${barreno.anomalia3 || "Sin dato"}</div>
+                        <div><span class="font-semibold text-slate-700">Anomalía gravimétrica:</span> ${Number.isFinite(barreno.anomaliaGravimetrica) ? barreno.anomaliaGravimetrica : "Sin dato"}</div>
+                        <div><span class="font-semibold text-slate-700">Anomalía 1:</span> ${barreno.anomalia1 || "Sin dato"}</div>
+                        <div><span class="font-semibold text-slate-700">Anomalía 2:</span> ${barreno.anomalia2 || "Sin dato"}</div>
+                        <div class="md:col-span-2"><span class="font-semibold text-slate-700">Anomalía 3:</span> ${barreno.anomalia3 || "Sin dato"}</div>
                     </div>
                 </div>
                 <div class="rounded-lg border border-slate-200 bg-white p-4 md:col-span-2">
                     <div class="mb-2 text-sm font-bold uppercase tracking-[0.14em] text-slate-500">Intervalos y anexos</div>
-                    <div class="mb-3 text-sm text-slate-600"><span class="font-semibold text-slate-700">Intervalos de interes:</span> ${barreno.intervalosInteres || "Sin dato"}</div>
+                    <div class="mb-3 text-sm text-slate-600"><span class="font-semibold text-slate-700">Intervalos de interés:</span> ${barreno.intervalosInteres || "Sin dato"}</div>
                     <ul class="mb-4 list-disc pl-5 text-sm text-slate-600">${intervalosHtml}</ul>
                     ${archivoHtml}
                     <div class="mt-3 text-sm text-slate-600"><span class="font-semibold text-slate-700">Observaciones:</span> ${barreno.observaciones || "Sin dato"}</div>
                 </div>
             </div>
         `;
+        const downloadButton = barrenoDetailContent.querySelector("[data-barreno-download]");
+        if (downloadButton) {
+            downloadButton.addEventListener("click", async () => {
+                try {
+                    await downloadBarrenoAttachment(barreno);
+                } catch (error) {
+                    await showBarrenoValidationAlert("No fue posible descargar el archivo", [error.message || "Intente nuevamente."], "warning");
+                }
+            });
+        }
+    }
+
+    function renderBarrenoPagination(totalPages, start, count) {
+        if (!barrenosPagination) return;
+        if (state.barrenos.length === 0) {
+            barrenosPagination.innerHTML = "";
+            return;
+        }
+        barrenosPagination.innerHTML = `
+            <div>Mostrando ${start + 1}-${start + count} de ${state.barrenos.length} barrenos.</div>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" class="secondary-button !w-auto" data-barreno-page="prev" ${state.barrenoPage <= 1 ? "disabled" : ""}>Anterior</button>
+                <span class="inline-flex items-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600">Página ${state.barrenoPage} de ${totalPages}</span>
+                <button type="button" class="secondary-button !w-auto" data-barreno-page="next" ${state.barrenoPage >= totalPages ? "disabled" : ""}>Siguiente</button>
+            </div>
+        `;
+        barrenosPagination.querySelectorAll("[data-barreno-page]").forEach((button) => {
+            button.addEventListener("click", () => {
+                state.barrenoPage += button.dataset.barrenoPage === "next" ? 1 : -1;
+                renderBarrenosCatalogList();
+            });
+        });
     }
 
     function renderBarrenosCatalogList() {
+        if (!barrenosList) return;
         barrenosList.innerHTML = "";
         if (state.barrenos.length === 0) {
             state.selectedBarrenoId = null;
-            barrenosList.innerHTML = '<li class="rounded-lg border border-dashed border-slate-300 p-4 text-slate-500">No hay barrenos registrados aun.</li>';
+            barrenosList.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-500">No hay barrenos registrados aún.</td></tr>';
+            renderBarrenoPagination(1, 0, 0);
             renderBarrenoDetail();
             return;
         }
@@ -706,32 +1051,40 @@
             state.selectedBarrenoId = state.barrenos[0].id;
         }
 
-        state.barrenos.forEach((barreno) => {
+        const { items, totalPages, start } = getPagedBarrenos();
+        items.forEach((barreno) => {
+            const status = getBarrenoStatus(barreno);
             const isSelected = barreno.id === state.selectedBarrenoId;
-            const li = document.createElement("li");
-            li.className = `rounded-xl border p-4 shadow-sm ${isSelected ? "border-primary bg-primary/5" : "border-slate-200 bg-white"}`;
-            li.innerHTML = `
-                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div class="space-y-2">
-                        <div class="text-base font-bold text-slate-800">${barreno.id}</div>
-                        <div class="text-sm text-slate-600">${barreno.estado || "-"} / ${barreno.municipio || "-"} / ${barreno.localidad || "Sin localidad"}</div>
-                        <div class="text-xs text-slate-500">Perforista: ${barreno.perforista || "Sin dato"} · Intervalos: ${barreno.intervalos.length} · TCR: ${Number.isFinite(barreno.tcr) ? barreno.tcr.toFixed(4) : "-"}</div>
-                    </div>
+            const canManage = canManageBarreno(barreno);
+            const row = document.createElement("tr");
+            row.className = isSelected ? "bg-primary/5" : "bg-white";
+            row.innerHTML = `
+                <td class="px-4 py-3 align-top">
+                    <div class="font-bold text-slate-800">${barreno.id}</div>
+                    <div class="text-xs text-slate-500">${barreno.proyecto || "Sin proyecto"}</div>
+                </td>
+                <td class="px-4 py-3 align-top text-slate-600">${barreno.estado || "-"} / ${barreno.municipio || "-"}<br><span class="text-xs text-slate-500">${barreno.localidad || "Sin localidad"}</span></td>
+                <td class="px-4 py-3 align-top text-slate-600">${barreno.perforista || "Sin dato"}</td>
+                <td class="px-4 py-3 align-top text-slate-600">${Number.isFinite(barreno.tcr) ? barreno.tcr.toFixed(4) : "-"}</td>
+                <td class="px-4 py-3 align-top"><span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${status.classes}">${status.label}</span></td>
+                <td class="px-4 py-3 align-top">
                     <div class="flex flex-wrap gap-2">
-                        <button type="button" class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:border-primary hover:text-primary" data-barreno-detail="${barreno.id}">Ver detalle</button>
+                        <button type="button" class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:border-primary hover:text-primary" data-barreno-action="view" data-barreno-id="${barreno.id}">Ver</button>
+                        ${canManage ? `<button type="button" class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:border-primary hover:text-primary" data-barreno-action="edit" data-barreno-id="${barreno.id}">Editar</button>` : ""}
+                        ${canManage ? `<button type="button" class="inline-flex items-center rounded-lg border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-50" data-barreno-action="delete" data-barreno-id="${barreno.id}">Borrar</button>` : ""}
                     </div>
-                </div>
+                </td>
             `;
-            barrenosList.appendChild(li);
+            barrenosList.appendChild(row);
         });
 
-        barrenosList.querySelectorAll("[data-barreno-detail]").forEach((button) => {
+        barrenosList.querySelectorAll("[data-barreno-action]").forEach((button) => {
             button.addEventListener("click", () => {
-                state.selectedBarrenoId = button.dataset.barrenoDetail;
-                renderBarrenosCatalogList();
+                handleBarrenoAction(button.dataset.barrenoAction, button.dataset.barrenoId);
             });
         });
 
+        renderBarrenoPagination(totalPages, start, items.length);
         renderBarrenoDetail();
     }
 
@@ -751,7 +1104,7 @@
         showBarrenoCatalogBtn?.classList.toggle("text-white", state.barrenoView === "catalog");
         if (barrenoHeaderCopy) {
             barrenoHeaderCopy.textContent = state.barrenoView === "catalog"
-                ? "Consulte los barrenos registrados y abra su ficha tecnica completa sin entrar al formulario de alta."
+                ? "Consulte los barrenos registrados y abra su ficha técnica completa sin entrar al formulario de alta."
                 : "Capture un nuevo barreno y sus intervalos conforme al cuestionario operativo.";
         }
         if (state.barrenoView === "catalog") {
@@ -759,13 +1112,13 @@
         }
     }
 
-    function showBarrenoWizardView(mode = state.barrenoView || "form") {
+    async function showBarrenoWizardView(mode = state.barrenoView || "form") {
         muestraWizard.classList.add("hidden");
         barrenoWizard.classList.remove("hidden");
         if (backToCardsFromBarrenoBtn) {
             backToCardsFromBarrenoBtn.classList.toggle("hidden", state.requestedView === "barrenos" || state.requestedView === "barrenos-catalogo");
         }
-        hydrateBarrenoGeoSelects();
+        await hydrateBarrenoGeoSelects();
         setBarrenoView(mode);
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -849,14 +1202,14 @@
                 key: "procedencia_arcillas",
                 title: "Procedencia",
                 subtitle: !hasAvailableBarrenos()
-                    ? "Aun no existe un barreno registrado; la procedencia disponible es Superficie hasta registrar uno."
-                    : "Indique si la muestra de arcilla proviene de superficie o de profundidad (nucleo).",
+                    ? "Aún no existe un barreno registrado; la procedencia disponible es Superficie hasta registrar uno."
+                    : "Indique si la muestra de arcilla proviene de superficie o de profundidad (núcleo).",
                 fields: [{
                     key: "origenArcilla",
                     label: "Procedencia",
                     type: "radio",
                     required: true,
-                    options: hasAvailableBarrenos() ? ["Superficie", "Profundidad (Nucleo)"] : ["Superficie"]
+                    options: hasAvailableBarrenos() ? ["Superficie", "Profundidad (Núcleo)"] : ["Superficie"]
                 }]
             });
 
@@ -873,10 +1226,10 @@
                 });
             }
 
-            if (state.data.origenArcilla === "Profundidad (Nucleo)") {
+            if (state.data.origenArcilla === "Profundidad (Núcleo)") {
                 steps.push({
                     key: "arcillas_nucleo",
-                    title: "Arcillas de nucleo",
+                    title: "Arcillas de núcleo",
                     subtitle: "Seleccione el barreno y el intervalo de donde procede la muestra.",
                     fields: [
                         { key: "arcilla_barreno_id", label: "Barreno (ID)", type: "select", required: true },
@@ -915,10 +1268,10 @@
 
         steps.push({
             key: "descripcion",
-            title: "Descripcion tecnica y evidencias",
+            title: "Descripción técnica y evidencias",
             subtitle: "Caracterizacion geologica, notas y fotografias de la muestra.",
             fields: [
-                { key: "litologia", label: "Litologia", type: "select", required: true, options: LITOLOGIAS },
+                { key: "litologia", label: "Litología", type: "select", required: true, options: LITOLOGIAS },
                 { key: "color", label: "Color", type: "select", required: true, options: COLORES_MUESTRA },
                 { key: "textura", label: "Textura", type: "select", required: true, options: TEXTURAS_MUESTRA },
                 { key: "notas", label: "Notas", type: "textarea", required: false },
@@ -995,7 +1348,7 @@
                         syncBarrenoAvailability();
                     }
                     if (field.key === "origenArcilla") {
-                        if (option === "Profundidad (Nucleo)" && !hasAvailableBarrenos()) {
+                        if (option === "Profundidad (Núcleo)" && !hasAvailableBarrenos()) {
                             state.data.origenArcilla = "Superficie";
                             showMessage(["Aun no existe un barreno registrado; se debe registrar uno para continuar con el proceso."], "warning");
                             render();
@@ -1057,7 +1410,7 @@
             }
             if (field.key === "arcilla_barreno_id") {
                 options = getBarrenoOptions();
-                if (options.length === 0) placeholder.textContent = "Sin barrenos en catalogo";
+                if (options.length === 0) placeholder.textContent = "Sin barrenos en catálogo";
             }
             if (field.key === "arcilla_intervalo_id") {
                 options = getIntervaloOptions();
@@ -1206,7 +1559,7 @@
 
         if (step.key === "arcillas_nucleo") {
             if (state.barrenos.length === 0) {
-                errors.push("No hay barrenos en catalogo. Registre un barreno primero.");
+                errors.push("No hay barrenos en catálogo. Registre un barreno primero.");
             }
             const desde = Number(state.data.arcilla_desde);
             const hasta = Number(state.data.arcilla_hasta);
@@ -1344,7 +1697,7 @@
             return `${prefix}${buildCatalogSequence(prefix)}`;
         }
 
-        const procedenciaKey = state.data.origenArcilla === "Profundidad (Nucleo)" ? "PROF" : "SUP";
+        const procedenciaKey = state.data.origenArcilla === "Profundidad (Núcleo)" ? "PROF" : "SUP";
         const prefix = `${estadoCve}-${municipioCve}-${procedenciaKey}-A.`;
         return `${prefix}${buildCatalogSequence(prefix)}`;
     }
@@ -1466,7 +1819,7 @@
 
         const warning = document.createElement("div");
         warning.className = "rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 md:col-span-2";
-        warning.innerHTML = "<div class='mb-2 font-semibold'>Aun no existe un barreno registrado.</div><div class='mb-2'>Se debe registrar uno para continuar con el proceso.</div>";
+        warning.innerHTML = "<div class='mb-2 font-semibold'>Aún no existe un barreno registrado.</div><div class='mb-2'>Se debe registrar uno para continuar con el proceso.</div>";
         const button = document.createElement("button");
         button.type = "button";
         button.className = "inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-[#7f1c3a]";
@@ -1485,7 +1838,7 @@
 
         stepTitle.textContent = current.title;
         stepSubtitle.textContent = isReadOnlyCatalogMode
-            ? "Este perfil consulta el catalogo de muestras y usa esta vista como referencia operativa."
+            ? "Este perfil consulta el catálogo de muestras y usa esta vista como referencia operativa."
             : (current.subtitle || "");
 
         fieldsContainer.innerHTML = "";
@@ -1656,7 +2009,7 @@
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         if (!canCreateSamples() && !state.editingMuestraId) {
-            showMessage(["Este perfil solo puede consultar el catalogo de muestras."], "warning");
+            showMessage(["Este perfil solo puede consultar el catálogo de muestras."], "warning");
             return;
         }
 
@@ -1679,7 +2032,7 @@
             showMessage([
                 result.error.message || "No fue posible sincronizar la muestra con Supabase.",
                 `ID de la muestra tomada: ${result.record.id}`,
-                "El registro quedo en respaldo local y sigue visible en el catalogo operativo."
+                "El registro quedó en respaldo local y sigue visible en el catálogo operativo."
             ], "warning");
             return;
         }
@@ -1687,11 +2040,12 @@
         showMessage([
             result.synced ? "Registro guardado en Supabase y respaldo local." : "Registro guardado solo en respaldo local.",
             `ID de la muestra tomada: ${result.record.id}`,
-            "El flujo de nucleo queda enlazado al catalogo de barrenos."
+            "El flujo de núcleo queda enlazado al catálogo de barrenos."
         ], result.synced ? "success" : "warning");
     });
     barrenoEstadoSelect.addEventListener("change", async (event) => {
         const estadoNombre = event.target.value;
+        const previousMunicipio = barrenoMunicipioSelect.value;
         barrenoMunicipioSelect.innerHTML = '<option value="">Cargando municipios...</option>';
         if (!estadoNombre) {
             barrenoMunicipioSelect.innerHTML = '<option value="">Seleccione primero un estado...</option>';
@@ -1707,6 +2061,9 @@
             option.textContent = nombre;
             barrenoMunicipioSelect.appendChild(option);
         });
+        if (previousMunicipio && municipios.includes(previousMunicipio)) {
+            barrenoMunicipioSelect.value = previousMunicipio;
+        }
         updateBarrenoIdPreview();
     });
 
@@ -1884,6 +2241,8 @@
             tcr: numberOrNull(record.tcr),
             intervalos_interes: record.intervalosInteres || null,
             archivo_descripcion_nucleo: record.archivoDescripcion || null,
+            archivo_descripcion_bucket: record.archivoDescripcionBucket || null,
+            archivo_descripcion_path: record.archivoDescripcionPath || null,
             observaciones: record.observaciones || null
         };
     }
@@ -1898,15 +2257,15 @@
         }
         const litologia = normalizeToken(record.litologiaLocal);
         if (litologia.includes("GRANITO") || litologia.includes("RIOLITA")) {
-            return record.tcr < 0.9 ? "TCR menor a 0.90 para roca ignea masiva; el cuestionario sugiere revisar causa de baja recuperacion." : "";
+            return record.tcr < 0.9 ? "TCR menor a 0.90 para roca ígnea masiva; el cuestionario sugiere revisar causa de baja recuperación." : "";
         }
         if (litologia.includes("TOBA") || litologia.includes("FRACTUR")) {
-            return record.tcr < 0.75 ? "TCR menor a 0.75 para roca volcanica fracturada/toba; revise causa de baja recuperacion." : "";
+            return record.tcr < 0.75 ? "TCR menor a 0.75 para roca volcánica fracturada/toba; revise causa de baja recuperación." : "";
         }
         if (litologia.includes("ARCILLA") || litologia.includes("LIMO") || litologia.includes("CONGLOMER")) {
-            return record.tcr < 0.85 ? "TCR menor a 0.85 para arcillas, limos o conglomerados; revise causa de baja recuperacion." : "";
+            return record.tcr < 0.85 ? "TCR menor a 0.85 para arcillas, limos o conglomerados; revise causa de baja recuperación." : "";
         }
-        return record.tcr < 0.85 ? "TCR menor a 0.85; revise causa de baja recuperacion." : "";
+        return record.tcr < 0.85 ? "TCR menor a 0.85; revise causa de baja recuperación." : "";
     }
 
     function validateBarrenoRecord(record) {
@@ -1915,7 +2274,7 @@
         const today = new Date().toISOString().slice(0, 10);
         if (!record.id) errors.push("Barreno (ID) es obligatorio.");
         if (!record.proyecto) errors.push("Proyecto es obligatorio.");
-        if (!record.subregionSigla) errors.push("Sigla subregion es obligatoria.");
+        if (!record.subregionSigla) errors.push("Sigla subregión es obligatoria.");
         if (!record.perforista) errors.push("Perforista es obligatorio.");
         if (!record.responsable) errors.push("Responsable es obligatorio.");
         if (!record.estado) errors.push("Estado es obligatorio.");
@@ -1924,17 +2283,17 @@
         if (!Number.isFinite(record.longitud) || record.longitud < -118.5 || record.longitud > -86.0) errors.push("Longitud debe estar entre -118.5 y -86.0.");
         if (!Number.isFinite(record.altitud) || record.altitud <= 0) errors.push("Altitud debe ser mayor a 0.");
         if (!Number.isFinite(record.azimut) || record.azimut < 0 || record.azimut > 360) errors.push("Azimut debe estar entre 0 y 360.");
-        if (!Number.isFinite(record.inclinacion) || record.inclinacion < -90 || record.inclinacion > 0) errors.push("Inclinacion debe estar entre -90 y 0.");
-        if (!record.tipoBarrenacion) errors.push("Tipo de barrenacion es obligatorio.");
+        if (!Number.isFinite(record.inclinacion) || record.inclinacion < -90 || record.inclinacion > 0) errors.push("Inclinación debe estar entre -90 y 0.");
+        if (!record.tipoBarrenacion) errors.push("Tipo de barrenación es obligatorio.");
         if (!record.fechaInicio) errors.push("Fecha de inicio es obligatoria.");
-        if (!record.fechaFin) errors.push("Fecha de finalizacion es obligatoria.");
+        if (!record.fechaFin) errors.push("Fecha de finalización es obligatoria.");
         if (record.fechaInicio && record.fechaInicio > today) errors.push("Fecha de inicio debe ser menor o igual a la fecha de registro.");
-        if (record.fechaInicio && record.fechaFin && record.fechaFin < record.fechaInicio) errors.push("Fecha de finalizacion debe ser mayor o igual a la fecha de inicio.");
+        if (record.fechaInicio && record.fechaFin && record.fechaFin < record.fechaInicio) errors.push("Fecha de finalización debe ser mayor o igual a la fecha de inicio.");
         if (!Number.isFinite(record.longitudPerforada) || record.longitudPerforada <= 0) errors.push("Longitud perforada debe ser mayor a 0.");
         if (!Number.isFinite(record.longitudRecuperada) || record.longitudRecuperada <= 0) errors.push("Longitud recuperada debe ser mayor a 0.");
         if (Number.isFinite(record.longitudPerforada) && Number.isFinite(record.longitudRecuperada) && record.longitudRecuperada > record.longitudPerforada) errors.push("Longitud recuperada no puede ser mayor que la longitud perforada.");
-        if (!Number.isFinite(record.diametroMm) || record.diametroMm <= 0) errors.push("Diametro debe ser mayor a 0.");
-        if (!Number.isFinite(record.numeroCajas) || record.numeroCajas <= 0) errors.push("Numero de cajas debe ser mayor a 0.");
+        if (!Number.isFinite(record.diametroMm) || record.diametroMm <= 0) errors.push("Diámetro debe ser mayor a 0.");
+        if (!Number.isFinite(record.numeroCajas) || record.numeroCajas <= 0) errors.push("Número de cajas debe ser mayor a 0.");
         if (!record.nombreCajas) errors.push("Nombre de cajas es obligatorio.");
         if (record.intervalos.length === 0) errors.push("Debe capturar al menos un intervalo.");
 
@@ -1964,22 +2323,22 @@
             }
         }
 
-        if (state.barrenos.some((barreno) => barreno.id === record.id)) {
-            errors.push("El Barreno (ID) ya existe en catalogo.");
+        if (state.barrenos.some((barreno) => barreno.id === record.id && barreno.id !== state.editingBarrenoId)) {
+            errors.push("El Barreno (ID) ya existe en catálogo.");
         }
 
         if (!record.localidad) warnings.push("Localidad no esta capturada.");
-        if (!record.descripcionLocal) warnings.push("Descripcion local no esta capturada.");
-        if (!record.litologiaLocal) warnings.push("Litologia local no esta capturada.");
+        if (!record.descripcionLocal) warnings.push("Descripción local no está capturada.");
+        if (!record.litologiaLocal) warnings.push("Litología local no está capturada.");
         if (!record.estructuraAledana) warnings.push("Estructura aledana no esta capturada.");
         if (!record.accesibilidad) warnings.push("Accesibilidad no esta capturada.");
         if (!record.tipoTerreno) warnings.push("Tipo de terreno no esta capturado.");
-        if (!record.responsableDescripcion) warnings.push("Responsable de descripcion geologica no esta capturado.");
+        if (!record.responsableDescripcion) warnings.push("Responsable de descripción geológica no está capturado.");
         if (!record.rqd) warnings.push("RQD no esta capturado.");
-        if (!record.intervalosInteres) warnings.push("Intervalos de interes no estan capturados.");
-        if (!record.archivoDescripcion) warnings.push("Archivo de descripcion del nucleo no esta cargado.");
-        if (!record.observaciones) warnings.push("Observaciones no estan capturadas.");
-        if (!record.anomalia1 && !record.anomalia2 && !record.anomalia3) warnings.push("No se capturo ninguna anomalia prospectiva para el barreno.");
+        if (!record.intervalosInteres) warnings.push("Intervalos de interés no están capturados.");
+        if (!record.archivoDescripcion) warnings.push("Archivo de descripción del núcleo no está cargado.");
+        if (!record.observaciones) warnings.push("Observaciones no están capturadas.");
+        if (!record.anomalia1 && !record.anomalia2 && !record.anomalia3) warnings.push("No se capturó ninguna anomalía prospectiva para el barreno.");
         const tcrWarning = getBarrenoTcrWarning(record);
         if (tcrWarning) warnings.push(tcrWarning);
 
@@ -2000,7 +2359,7 @@
         if (window.Modal?.confirm) {
             return window.Modal.confirm({
                 title: "Revise estas advertencias",
-                subtitle: "El registro puede continuar, pero requiere confirmacion.",
+                subtitle: "El registro puede continuar, pero requiere confirmación.",
                 message,
                 type: "warning",
                 confirmText: "Continuar",
@@ -2011,9 +2370,203 @@
         return false;
     }
 
-    async function saveBarreno(record) {
-        state.barrenos.push(record);
-        state.selectedBarrenoId = record.id;
+    function setSelectValue(selectElement, value) {
+        if (!selectElement) return;
+        const normalizedValue = value || "";
+        if (normalizedValue && !Array.from(selectElement.options).some((option) => option.value === normalizedValue)) {
+            const option = document.createElement("option");
+            option.value = normalizedValue;
+            option.textContent = normalizedValue;
+            selectElement.appendChild(option);
+        }
+        selectElement.value = normalizedValue;
+    }
+
+    function populateBarrenoIntervals(intervalos = []) {
+        barrenoIntervalRows.innerHTML = "";
+        if (Array.isArray(intervalos) && intervalos.length > 0) {
+            intervalos.forEach((intervalo) => addIntervalRow(intervalo));
+        }
+        ensureAtLeastOneIntervalRow();
+    }
+
+    async function fillBarrenoMunicipios(estadoNombre, municipioNombre) {
+        await loadMunicipiosForEstado(estadoNombre);
+        const municipios = getMunicipioOptionsForBarreno(estadoNombre);
+        barrenoMunicipioSelect.innerHTML = '<option value="">Seleccione...</option>';
+        municipios.forEach((nombre) => {
+            const option = document.createElement("option");
+            option.value = nombre;
+            option.textContent = nombre;
+            barrenoMunicipioSelect.appendChild(option);
+        });
+        setSelectValue(barrenoMunicipioSelect, municipioNombre || "");
+    }
+
+    function resetBarrenoDraft() {
+        state.editingBarrenoId = null;
+        state.barrenoArchivoDescripcionActual = "";
+        state.barrenoArchivoDescripcionBucketActual = "";
+        state.barrenoArchivoDescripcionPathActual = "";
+        barrenoForm.reset();
+        barrenoMessages.classList.add("hidden");
+        barrenoMunicipioSelect.innerHTML = '<option value="">Seleccione primero un estado...</option>';
+        barrenoIntervalRows.innerHTML = "";
+        ensureAtLeastOneIntervalRow();
+        updateBarrenoIdPreview();
+        updateBarrenoTcrPreview();
+        const submitButton = barrenoForm.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.textContent = "Guardar barreno";
+    }
+
+    async function startBarrenoEdit(record) {
+        if (!record) return;
+        await showBarrenoWizardView("form");
+        state.editingBarrenoId = record.id;
+        state.barrenoArchivoDescripcionActual = record.archivoDescripcion || "";
+        state.barrenoArchivoDescripcionBucketActual = record.archivoDescripcionBucket || "";
+        state.barrenoArchivoDescripcionPathActual = record.archivoDescripcionPath || "";
+        if (barrenoProyectoInput) barrenoProyectoInput.value = record.proyecto || "SEFMP.31";
+        if (barrenoIdInput) barrenoIdInput.value = record.id || "";
+        if (barrenoSubregionInput) barrenoSubregionInput.value = record.subregionSigla || "";
+        document.getElementById("barrenoPerforista").value = record.perforista || "";
+        document.getElementById("barrenoResponsable").value = record.responsable || "";
+        document.getElementById("barrenoResponsableDescripcion").value = record.responsableDescripcion || "";
+        setSelectValue(barrenoEstadoSelect, record.estado || "");
+        await fillBarrenoMunicipios(record.estado, record.municipio);
+        document.getElementById("barrenoLocalidad").value = record.localidad || "";
+        document.getElementById("barrenoDescripcionLocal").value = record.descripcionLocal || "";
+        document.getElementById("barrenoLitologiaLocal").value = record.litologiaLocal || "";
+        document.getElementById("barrenoEstructuraAledana").value = record.estructuraAledana || "";
+        document.getElementById("barrenoAnomaliaGravimetrica").value = Number.isFinite(record.anomaliaGravimetrica) ? record.anomaliaGravimetrica : "";
+        document.getElementById("barrenoAnomalia1").value = record.anomalia1 || "";
+        document.getElementById("barrenoAnomalia2").value = record.anomalia2 || "";
+        document.getElementById("barrenoAnomalia3").value = record.anomalia3 || "";
+        setSelectValue(document.getElementById("barrenoAccesibilidad"), record.accesibilidad || "");
+        setSelectValue(document.getElementById("barrenoTipoTerreno"), record.tipoTerreno || "");
+        document.getElementById("barrenoLatitud").value = Number.isFinite(record.latitud) ? record.latitud : "";
+        document.getElementById("barrenoLongitudCoord").value = Number.isFinite(record.longitud) ? record.longitud : "";
+        document.getElementById("barrenoAltitud").value = Number.isFinite(record.altitud) ? record.altitud : "";
+        document.getElementById("barrenoAzimut").value = Number.isFinite(record.azimut) ? record.azimut : "";
+        document.getElementById("barrenoInclinacion").value = Number.isFinite(record.inclinacion) ? record.inclinacion : "";
+        setSelectValue(document.getElementById("barrenoTipo"), record.tipoBarrenacion || "");
+        document.getElementById("barrenoFechaInicio").value = record.fechaInicio || "";
+        document.getElementById("barrenoFechaFin").value = record.fechaFin || "";
+        document.getElementById("barrenoLongitud").value = Number.isFinite(record.longitudPerforada) ? record.longitudPerforada : "";
+        document.getElementById("barrenoLongitudRecuperada").value = Number.isFinite(record.longitudRecuperada) ? record.longitudRecuperada : "";
+        document.getElementById("barrenoDiametro").value = Number.isFinite(record.diametroMm) ? record.diametroMm : "";
+        document.getElementById("barrenoNumeroCajas").value = Number.isFinite(record.numeroCajas) ? record.numeroCajas : "";
+        document.getElementById("barrenoNombreCajas").value = record.nombreCajas || "";
+        setSelectValue(document.getElementById("barrenoRQD"), record.rqd || "");
+        document.getElementById("barrenoIntervalosInteres").value = record.intervalosInteres || "";
+        document.getElementById("barrenoObservaciones").value = record.observaciones || "";
+        populateBarrenoIntervals(record.intervalos || []);
+        updateBarrenoIdPreview();
+        updateBarrenoTcrPreview();
+        const submitButton = barrenoForm.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.textContent = "Guardar cambios";
+        showBarrenoMessage([
+            state.barrenoArchivoDescripcionActual
+                ? `Archivo actual: ${state.barrenoArchivoDescripcionActual}. Si selecciona uno nuevo, se reemplazará.`
+                : "Este barreno no tiene archivo adjunto. Puede cargarlo ahora y guardar cambios."
+        ], "warning");
+
+    }
+
+    async function saveBarreno(record, attachmentFile = null) {
+        const existingIndex = state.barrenos.findIndex((item) => item.id === record.id);
+        const existingRecord = existingIndex >= 0 ? state.barrenos[existingIndex] : null;
+        const nextRecord = normalizeBarrenoRecord({
+            ...existingRecord,
+            ...record,
+            createdById: existingRecord?.createdById || state.currentUser?.id || null,
+            createdByEmail: existingRecord?.createdByEmail || state.currentUser?.email || "",
+            createdAt: existingRecord?.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+
+        if (existingIndex >= 0) {
+            state.barrenos[existingIndex] = nextRecord;
+        } else {
+            state.barrenos.unshift(nextRecord);
+        }
+        state.selectedBarrenoId = nextRecord.id;
+        persistLocalBarrenosCatalog();
+
+        if (!canUseSupabase()) {
+            state.persistence = "local";
+            return { synced: false, record: nextRecord };
+        }
+
+        if (attachmentFile) {
+            const uploadedAttachment = await uploadBarrenoAttachment(nextRecord.id, attachmentFile);
+            nextRecord.archivoDescripcion = uploadedAttachment.fileName;
+            nextRecord.archivoDescripcionBucket = uploadedAttachment.bucket;
+            nextRecord.archivoDescripcionPath = uploadedAttachment.path;
+            if (existingIndex >= 0) {
+                state.barrenos[existingIndex] = normalizeBarrenoRecord(nextRecord);
+            } else {
+                state.barrenos[0] = normalizeBarrenoRecord(nextRecord);
+            }
+            state.barrenoArchivoDescripcionActual = uploadedAttachment.fileName;
+            state.barrenoArchivoDescripcionBucketActual = uploadedAttachment.bucket;
+            state.barrenoArchivoDescripcionPathActual = uploadedAttachment.path;
+            persistLocalBarrenosCatalog();
+        }
+
+        const barrenoRow = buildBarrenoRow(nextRecord);
+        if (existingRecord) {
+            await supabaseRequest(`barrenos?id=eq.${encodeURIComponent(nextRecord.id)}`, {
+                method: "PATCH",
+                headers: { Prefer: "return=minimal" },
+                body: barrenoRow
+            });
+            await supabaseRequest(`barreno_intervalos?barreno_id=eq.${encodeURIComponent(nextRecord.id)}`, {
+                method: "DELETE",
+                headers: { Prefer: "return=minimal" }
+            });
+        } else {
+            await supabaseRequest("barrenos", {
+                method: "POST",
+                headers: { Prefer: "return=minimal" },
+                body: barrenoRow
+            });
+        }
+
+        if (nextRecord.intervalos.length > 0) {
+            await supabaseRequest("barreno_intervalos?on_conflict=barreno_id,intervalo_id", {
+                method: "POST",
+                headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+                body: nextRecord.intervalos.map((intervalo, index) => ({
+                    barreno_id: nextRecord.id,
+                    intervalo_id: intervalo.id,
+                    orden: index + 1,
+                    desde: intervalo.desde,
+                    hasta: intervalo.hasta
+                }))
+            });
+        }
+
+        await writeRegistryAuditLog(
+            existingRecord ? "update" : "create",
+            "barreno",
+            nextRecord.id,
+            nextRecord.id,
+            buildBarrenoAuditSnapshot(existingRecord),
+            buildBarrenoAuditSnapshot(nextRecord),
+            { entity_group: "barrenos", source: "registro-muestras-supabase.js" }
+        );
+
+        state.persistence = "supabase";
+        return { synced: true, record: nextRecord };
+    }
+
+    async function deleteBarreno(record) {
+        const beforeSnapshot = buildBarrenoAuditSnapshot(record);
+        state.barrenos = state.barrenos.filter((item) => item.id !== record.id);
+        if (state.selectedBarrenoId === record.id) {
+            state.selectedBarrenoId = state.barrenos[0]?.id || null;
+        }
         persistLocalBarrenosCatalog();
 
         if (!canUseSupabase()) {
@@ -2021,34 +2574,72 @@
             return { synced: false };
         }
 
-        await supabaseRequest("barrenos", {
-            method: "POST",
-            headers: { Prefer: "return=minimal" },
-            body: buildBarrenoRow(record)
+        await supabaseRequest(`barrenos?id=eq.${encodeURIComponent(record.id)}`, {
+            method: "DELETE",
+            headers: { Prefer: "return=minimal" }
         });
-
-        await supabaseRequest("barreno_intervalos", {
-            method: "POST",
-            headers: { Prefer: "return=minimal" },
-            body: record.intervalos.map((intervalo, index) => ({
-                barreno_id: record.id,
-                intervalo_id: intervalo.id,
-                orden: index + 1,
-                desde: intervalo.desde,
-                hasta: intervalo.hasta
-            }))
-        });
-
+        await writeRegistryAuditLog(
+            "delete",
+            "barreno",
+            record.id,
+            record.id,
+            beforeSnapshot,
+            null,
+            { entity_group: "barrenos", source: "registro-muestras-supabase.js" }
+        );
         state.persistence = "supabase";
         return { synced: true };
+    }
+
+    async function handleBarrenoAction(action, barrenoId) {
+        const record = state.barrenos.find((item) => item.id === barrenoId);
+        if (!record) return;
+
+        if (action === "view") {
+            state.selectedBarrenoId = barrenoId;
+            renderBarrenosCatalogList();
+            return;
+        }
+
+        if (!canManageBarreno(record)) {
+            await showBarrenoValidationAlert("Operación no permitida", ["Solo el usuario creador del barreno o un admin puede modificarlo."], "warning");
+            return;
+        }
+
+        if (action === "edit") {
+            await startBarrenoEdit(record);
+            return;
+        }
+
+        if (action === "delete") {
+            const confirmed = window.Modal?.confirm
+                ? await window.Modal.confirm({
+                    title: "Borrar barreno",
+                    subtitle: "La operación elimina el barreno y sus intervalos asociados.",
+                    message: `Confirme la eliminación de ${record.id}.`,
+                    type: "warning",
+                    confirmText: "Borrar",
+                    cancelText: "Cancelar"
+                })
+                : false;
+            if (!confirmed) return;
+            try {
+                const result = await deleteBarreno(record);
+                renderBarrenosCatalogList();
+                await showBarrenoValidationAlert("Barreno eliminado", [result.synced ? "Se eliminó en Supabase y respaldo local." : "Se eliminó solo en respaldo local."], result.synced ? "success" : "warning");
+            } catch (error) {
+                await showBarrenoValidationAlert("No fue posible borrar el barreno", [error.message || "Revise políticas o conectividad."], "danger");
+            }
+        }
     }
 
     barrenoForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         showBarrenoMessage([]);
 
+        const attachmentFile = document.getElementById("barrenoArchivoDescripcion")?.files?.[0] || null;
         const record = {
-            id: textInputValue("barrenoId"),
+            id: state.editingBarrenoId || textInputValue("barrenoId"),
             proyecto: textInputValue("barrenoProyecto"),
             subregionSigla: textInputValue("barrenoSubregion"),
             perforista: textInputValue("barrenoPerforista"),
@@ -2082,7 +2673,9 @@
             rqd: textInputValue("barrenoRQD"),
             tcr: numberOrNull(textInputValue("barrenoTcr")),
             intervalosInteres: textInputValue("barrenoIntervalosInteres"),
-            archivoDescripcion: fileNameValue("barrenoArchivoDescripcion"),
+            archivoDescripcion: attachmentFile?.name || state.barrenoArchivoDescripcionActual,
+            archivoDescripcionBucket: state.barrenoArchivoDescripcionBucketActual,
+            archivoDescripcionPath: state.barrenoArchivoDescripcionPathActual,
             observaciones: textInputValue("barrenoObservaciones"),
             intervalos: readIntervalRows()
         };
@@ -2101,23 +2694,18 @@
         }
 
         try {
-            const result = await saveBarreno(record);
+            const result = await saveBarreno(record, attachmentFile);
             renderBarrenosCatalogList();
             setBarrenoView("catalog");
-            barrenoForm.reset();
-            barrenoIntervalRows.innerHTML = "";
-            ensureAtLeastOneIntervalRow();
-            barrenoMunicipioSelect.innerHTML = '<option value="">Seleccione primero un estado...</option>';
-            updateBarrenoIdPreview();
-            updateBarrenoTcrPreview();
-            showBarrenoMessage([
+            resetBarrenoDraft();
+            await showBarrenoValidationAlert("Barreno guardado", [
                 result.synced ? "Barreno guardado en Supabase y respaldo local." : "Barreno guardado solo en respaldo local.",
                 `ID del barreno: ${record.id}`
             ], result.synced ? "success" : "warning");
         } catch (error) {
             state.persistence = "local";
             renderBarrenosCatalogList();
-            await showBarrenoValidationAlert("No fue posible sincronizar el barreno", [error.message || "El barreno quedo en respaldo local."], "warning");
+            await showBarrenoValidationAlert("No fue posible sincronizar el barreno", [error.message || "El barreno quedó en respaldo local."], "warning");
         }
     });
 
@@ -2128,7 +2716,8 @@
 
     if (openBarrenoBtn) {
         openBarrenoBtn.addEventListener("click", () => {
-            showBarrenoWizardView("form");
+            resetBarrenoDraft();
+    
         });
     }
 
@@ -2147,6 +2736,7 @@
 
     if (showBarrenoFormBtn) {
         showBarrenoFormBtn.addEventListener("click", () => {
+            resetBarrenoDraft();
             setBarrenoView("form");
         });
     }
@@ -2154,6 +2744,12 @@
     if (showBarrenoCatalogBtn) {
         showBarrenoCatalogBtn.addEventListener("click", () => {
             setBarrenoView("catalog");
+        });
+    }
+
+    if (discardBarrenoChangesBtn) {
+        discardBarrenoChangesBtn.addEventListener("click", () => {
+            resetBarrenoDraft();
         });
     }
 
@@ -2184,6 +2780,27 @@
 
     bootstrap();
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
