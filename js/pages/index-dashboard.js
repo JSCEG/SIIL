@@ -141,7 +141,7 @@
             icon: 'fa-person-digging',
             image: 'img/analisis_laboratorio.png',
             imageFallback: 'fa-mountain-sun',
-            href: 'registro-muestras.html',
+            href: 'registro-muestras.html?view=barrenos',
             cta: 'Abrir barrenos',
             priority: 10,
             category: 'stage'
@@ -543,6 +543,7 @@
         init();
     });
 }());
+
 
 
 

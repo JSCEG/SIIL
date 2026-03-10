@@ -307,162 +307,53 @@
             </p>
         </div>
 
-        <section id="cardsHome">
-            <div class="registro-grid">
-                <article class="registro-card">
-                    <div class="card-image">
-                        <img src="img/barreno.png" alt="Registro de Barreno" onerror="this.style.display='none';">
-                        <div class="card-badge">
-                            <span>1</span>
-                            <span>Paso Inicial</span>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h2 class="card-title">Registro de Barreno</h2>
-                        <p class="card-description">
-                            Captura la perforacion, longitud y continuidad de intervalos. Este catalogo alimenta las
-                            muestras de arcilla en profundidad y define la integridad del muestreo.
-                        </p>
-                        <div class="card-meta">
-                            <i class="fa-solid fa-layer-group"></i>
-                            <span>Operacion de Campo</span>
-                        </div>
-                        <button id="openBarrenoBtn" class="card-button" type="button">
-                            <i class="fa-solid fa-plus-circle"></i>
-                            Iniciar Registro
-                        </button>
-                    </div>
-                </article>
-
-                <article class="registro-card">
-                    <div class="card-image">
-                        <img src="img/mujer.png" alt="Registro de Muestra" onerror="this.style.display='none';">
-                        <div class="card-badge">
-                            <span>2</span>
-                            <span>Recoleccion</span>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h2 class="card-title">Registro de Muestra</h2>
-                        <p class="card-description">
-                            Captura el contexto geologico, geografico y operativo de arcillas y salmueras, y enlaza
-                            muestras de nucleo contra el catalogo de barrenos.
-                        </p>
-                        <div class="card-meta">
-                            <i class="fa-solid fa-vial"></i>
-                            <span>Muestreo y Etiquetado</span>
-                        </div>
-                        <button id="openMuestraBtn" class="card-button" type="button">
-                            <i class="fa-solid fa-plus-circle"></i>
-                            Iniciar Registro
-                        </button>
-                    </div>
-                </article>
-
-                <article class="registro-card">
-                    <div class="card-image">
-                        <img src="img/analisis_campo.png" alt="Analisis de Campo" onerror="this.style.display='none';">
-                        <div class="card-badge">
-                            <span>3</span>
-                            <span>Analisis In Situ</span>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h2 class="card-title">Analisis de Campo</h2>
-                        <p class="card-description">
-                            El esquema ya deja preparada la relacion por `id_muestra` para la siguiente fase de LIBS y XRF.
-                        </p>
-                        <div class="card-meta">
-                            <i class="fa-solid fa-flask"></i>
-                            <span>Proxima Fase</span>
-                        </div>
-                        <button class="card-button" disabled type="button">
-                            <i class="fa-solid fa-clock"></i>
-                            Proximamente
-                        </button>
-                    </div>
-                </article>
-
-                <article class="registro-card">
-                    <div class="card-image">
-                        <img src="img/analisis_laboratorio.png" alt="Analisis de Laboratorio" onerror="this.style.display='none';">
-                        <div class="card-badge">
-                            <span>4</span>
-                            <span>Resultados Finales</span>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h2 class="card-title">Analisis de Laboratorio</h2>
-                        <p class="card-description">
-                            El modelo tambien deja listas las referencias para ICP y carga posterior de resultados certificados.
-                        </p>
-                        <div class="card-meta">
-                            <i class="fa-solid fa-microscope"></i>
-                            <span>Proxima Fase</span>
-                        </div>
-                        <button class="card-button" disabled type="button">
-                            <i class="fa-solid fa-clock"></i>
-                            Proximamente
-                        </button>
-                    </div>
-                </article>
-            </div>
-
-            <div class="workflow-section">
-                <h3 class="workflow-title">Flujo de Trabajo del Sistema</h3>
-                <div class="workflow-steps">
-                    <div class="workflow-step">
-                        <div class="step-number">1</div>
-                        <div class="step-title">Perforacion</div>
-                        <div class="step-description">Registro del barreno con datos de profundidad e intervalos.</div>
-                    </div>
-                    <div class="workflow-step">
-                        <div class="step-number">2</div>
-                        <div class="step-title">Muestreo</div>
-                        <div class="step-description">Recoleccion y etiquetado de muestras con trazabilidad.</div>
-                    </div>
-                    <div class="workflow-step">
-                        <div class="step-number">3</div>
-                        <div class="step-title">Analisis</div>
-                        <div class="step-description">Relacion del catalogo de muestras con fases de campo y laboratorio.</div>
-                    </div>
-                    <div class="workflow-step">
-                        <div class="step-number">4</div>
-                        <div class="step-title">Resultados</div>
-                        <div class="step-description">Consulta posterior por id_muestra y evidencia asociada.</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-banner">
-                <div class="info-banner-title">
-                    <i class="fa-solid fa-circle-info"></i>
-                    Esquema conectado a Supabase
-                </div>
-                <p class="info-banner-text">
-                    Este modulo deja de depender solo de almacenamiento local. Si existe una sesion valida, barrenos,
-                    intervalos y muestras se sincronizan con Supabase. Si no hay conexion, el sistema conserva un respaldo local.
-                </p>
-            </div>
-        </section>
-
-        <section id="muestraWizard" class="hidden">
+                <section id="muestraWizard">
             <div class="wizard-shell">
                 <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div>
                         <button id="backToCardsBtn" class="secondary-button !w-auto" type="button">
                             <i class="fa-solid fa-arrow-left"></i>
-                            Volver
+                            Volver al inicio
                         </button>
                         <div id="dynamicStepTitle" class="mt-4">
                             <h2 class="section-title">Registro de Muestra</h2>
                         </div>
                         <p id="dynamicStepSubtitle" class="catalog-copy"></p>
                     </div>
-                    <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 md:max-w-sm">
-                        Los campos del wizard se ajustan segun la fuente de la muestra y guardan el payload tecnico para trazabilidad.
+                    <div class="flex flex-col gap-3 md:max-w-sm">
+                        <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                            Capture la muestra en un solo flujo. Si depende de un barreno, aqui mismo podra elegirlo del catalogo o registrar uno nuevo.
+                        </div>
+                        <button id="openBarrenoBtn" class="secondary-button !w-auto" type="button">
+                            <i class="fa-solid fa-drill"></i>
+                            Registrar barreno
+                        </button>
                     </div>
                 </div>
+                
+            <div class="catalog-shell">
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <h3 class="section-title">Perfil del capturista</h3>
+                        <p class="catalog-copy">Estos datos se leen automaticamente del usuario autenticado y forman parte del registro conforme al perfil activo.</p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-600">Solo lectura</span>
+                </div>
+                <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Correo</label>
+                        <input id="profileCorreo" class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-700" type="text" readonly>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Nombre</label>
+                        <input id="profileNombre" class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-700" type="text" readonly>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Institucion</label>
+                        <input id="profileInstitucion" class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-700" type="text" readonly>
+                    </div>
+                </div>
+            </div>
                 <div id="stepIndicator" class="mt-6 flex flex-wrap gap-2"></div>
                 <div id="formMessages" class="hidden rounded-lg border px-3 py-2 text-sm mt-6"></div>
                 <form id="registroMuestrasForm" class="mt-6 space-y-6">
@@ -478,9 +369,21 @@
             </div>
 
             <div class="catalog-shell">
-                <h3 class="section-title">Payload tecnico</h3>
-                <p class="catalog-copy">Vista previa del registro que se enviara al esquema `muestras` en Supabase.</p>
+                <h3 class="section-title">Vista tecnica del registro</h3>
+                <p class="catalog-copy">Vista tecnica del payload generado con las reglas del cuestionario; util para revision interna, no forma parte del formulario operativo.</p>
                 <pre id="payloadPreview" class="mt-4 overflow-x-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100"></pre>
+            </div>
+
+            <div class="catalog-shell">
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <h3 class="section-title">Catalogo operativo de muestras</h3>
+                        <p id="sampleCatalogIntro" class="catalog-copy">Listado de registros con estado y acciones disponibles segun el perfil autenticado.</p>
+                    </div>
+                    <span id="sampleRoleBadge" class="inline-flex items-center rounded-full bg-primary/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-primary">Perfil operativo</span>
+                </div>
+                <div id="sampleCatalogSummary" class="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"></div>
+                <ul id="muestrasList" class="mt-4 space-y-3"></ul>
             </div>
         </section>
 
@@ -490,16 +393,21 @@
                     <div>
                         <button id="backToCardsFromBarrenoBtn" class="secondary-button !w-auto" type="button">
                             <i class="fa-solid fa-arrow-left"></i>
-                            Volver
+                            Volver al inicio
                         </button>
-                        <h2 class="section-title mt-4">Registro de Barreno</h2>
-                        <p class="catalog-copy">Se almacena el barreno y sus intervalos para reutilizarse en muestras de nucleo.</p>
+                        <h2 class="section-title mt-4">Modulo de Barrenos</h2>
+                        <p id="barrenoHeaderCopy" class="catalog-copy">Gestione el alta y la consulta de barrenos registrados sin mezclar ambas tareas en una sola vista.</p>
                     </div>
                     <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 md:max-w-sm">
                         El ID del barreno se construye automaticamente con proyecto, subregion y consecutivo local/sincronizado.
                     </div>
                 </div>
-                <div id="barrenoMessages" class="hidden md:col-span-2 rounded-lg border px-3 py-2 text-sm mt-6"></div>
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <button id="showBarrenoFormBtn" class="secondary-button !w-auto" type="button">Nuevo barreno</button>
+                    <button id="showBarrenoCatalogBtn" class="secondary-button !w-auto" type="button">Barrenos registrados</button>
+                </div>
+                <div id="barrenoFormView" class="mt-6">
+                <div id="barrenoMessages" class="hidden md:col-span-2 rounded-lg border px-3 py-2 text-sm"></div>
                 <form id="registroBarrenoForm" class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoId">Barreno (ID)</label>
@@ -507,15 +415,23 @@
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoProyecto">Proyecto</label>
-                        <input id="barrenoProyecto" class="w-full rounded-lg border-slate-300 text-sm" type="text" required>
+                        <input id="barrenoProyecto" class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-700" type="text" value="SEFMP.31" readonly required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoSubregion">Sigla subregion</label>
+                        <input id="barrenoSubregion" class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-700" type="text" readonly required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoPerforista">Perforista</label>
+                        <input id="barrenoPerforista" class="w-full rounded-lg border-slate-300 text-sm" type="text" required>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoResponsable">Responsable</label>
                         <input id="barrenoResponsable" class="w-full rounded-lg border-slate-300 text-sm" type="text" required>
                     </div>
                     <div>
-                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoLongitud">Longitud perforada (m)</label>
-                        <input id="barrenoLongitud" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="any" min="0.01" required>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoResponsableDescripcion">Responsable descripcion geologica</label>
+                        <input id="barrenoResponsableDescripcion" class="w-full rounded-lg border-slate-300 text-sm" type="text">
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoEstado">Estado</label>
@@ -524,6 +440,145 @@
                     <div>
                         <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoMunicipio">Municipio</label>
                         <select id="barrenoMunicipio" class="w-full rounded-lg border-slate-300 text-sm" required></select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoLocalidad">Localidad</label>
+                        <input id="barrenoLocalidad" class="w-full rounded-lg border-slate-300 text-sm" type="text">
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoLitologiaLocal">Litologia local</label>
+                        <input id="barrenoLitologiaLocal" class="w-full rounded-lg border-slate-300 text-sm" type="text">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoDescripcionLocal">Descripcion local</label>
+                        <textarea id="barrenoDescripcionLocal" class="w-full rounded-lg border-slate-300 text-sm" rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoEstructuraAledana">Estructura aledana</label>
+                        <input id="barrenoEstructuraAledana" class="w-full rounded-lg border-slate-300 text-sm" type="text">
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoAnomaliaGravimetrica">Anomalia gravimetrica (mGal)</label>
+                        <input id="barrenoAnomaliaGravimetrica" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="any">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoAnomalia1">Anomalia 1</label>
+                        <textarea id="barrenoAnomalia1" class="w-full rounded-lg border-slate-300 text-sm" rows="2"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoAnomalia2">Anomalia 2</label>
+                        <textarea id="barrenoAnomalia2" class="w-full rounded-lg border-slate-300 text-sm" rows="2"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoAnomalia3">Anomalia 3</label>
+                        <textarea id="barrenoAnomalia3" class="w-full rounded-lg border-slate-300 text-sm" rows="2"></textarea>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoAccesibilidad">Accesibilidad</label>
+                        <select id="barrenoAccesibilidad" class="w-full rounded-lg border-slate-300 text-sm">
+                            <option value="">Seleccione...</option>
+                            <option>Buena</option>
+                            <option>Regular</option>
+                            <option>Mala</option>
+                            <option>Solo helicoptero</option>
+                            <option>Otra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoTipoTerreno">Tipo de terreno</label>
+                        <select id="barrenoTipoTerreno" class="w-full rounded-lg border-slate-300 text-sm">
+                            <option value="">Seleccione...</option>
+                            <option>Planicie (Valle o Cuenca)</option>
+                            <option>Lomerio suave</option>
+                            <option>Piedemonte</option>
+                            <option>Canada/Arroyo</option>
+                            <option>Mesa / Meseta</option>
+                            <option>Sierra (Ladera)</option>
+                            <option>Banco de Material</option>
+                            <option>Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoLatitud">Latitud (Norte)</label>
+                        <input id="barrenoLatitud" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="any" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoLongitudCoord">Longitud (Este)</label>
+                        <input id="barrenoLongitudCoord" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="any" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoAltitud">Altitud (msnm)</label>
+                        <input id="barrenoAltitud" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="any" min="0.01" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoAzimut">Azimut</label>
+                        <input id="barrenoAzimut" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="1" min="0" max="360" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoInclinacion">Inclinacion</label>
+                        <input id="barrenoInclinacion" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="1" min="-90" max="0" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoTipo">Tipo de barrenacion</label>
+                        <select id="barrenoTipo" class="w-full rounded-lg border-slate-300 text-sm" required>
+                            <option value="">Seleccione...</option>
+                            <option>Corte Diamante (CD)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoFechaInicio">Fecha de inicio</label>
+                        <input id="barrenoFechaInicio" class="w-full rounded-lg border-slate-300 text-sm" type="date" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoFechaFin">Fecha de finalizacion</label>
+                        <input id="barrenoFechaFin" class="w-full rounded-lg border-slate-300 text-sm" type="date" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoLongitud">Longitud perforada (m)</label>
+                        <input id="barrenoLongitud" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="any" min="0.01" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoLongitudRecuperada">Longitud recuperada (m)</label>
+                        <input id="barrenoLongitudRecuperada" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="any" min="0.01" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoTcr">TCR</label>
+                        <input id="barrenoTcr" class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-700" type="text" readonly>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoDiametro">Diametro (mm)</label>
+                        <input id="barrenoDiametro" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="1" min="1" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoNumeroCajas">Numero de cajas</label>
+                        <input id="barrenoNumeroCajas" class="w-full rounded-lg border-slate-300 text-sm" type="number" step="1" min="1" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoNombreCajas">Nombre de cajas</label>
+                        <input id="barrenoNombreCajas" class="w-full rounded-lg border-slate-300 text-sm" type="text" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoRQD">RQD</label>
+                        <select id="barrenoRQD" class="w-full rounded-lg border-slate-300 text-sm">
+                            <option value="">Seleccione...</option>
+                            <option>90% - 100% (Excelente)</option>
+                            <option>75% - 90% (Bueno)</option>
+                            <option>50% - 75% (Regular)</option>
+                            <option>25% - 50% (Pobre)</option>
+                            <option>0% - 25% (Muy pobre)</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoIntervalosInteres">Intervalos de interes</label>
+                        <textarea id="barrenoIntervalosInteres" class="w-full rounded-lg border-slate-300 text-sm" rows="2"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoArchivoDescripcion">Archivo de descripcion del nucleo</label>
+                        <input id="barrenoArchivoDescripcion" class="w-full rounded-lg border-slate-300 text-sm" type="file" accept=".xlsx,.csv">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="barrenoObservaciones">Observaciones</label>
+                        <textarea id="barrenoObservaciones" class="w-full rounded-lg border-slate-300 text-sm" rows="3"></textarea>
                     </div>
                     <div class="md:col-span-2">
                         <div class="mb-3 flex items-center justify-between">
@@ -539,12 +594,28 @@
                         <button class="primary-button md:!w-auto" type="submit">Guardar barreno</button>
                     </div>
                 </form>
+                </div>
             </div>
 
-            <div class="catalog-shell">
-                <h3 class="section-title">Catalogo de barrenos</h3>
-                <p class="catalog-copy">Listado de barrenos disponibles para vincular muestras de profundidad.</p>
+            <div id="barrenoCatalogView" class="catalog-shell hidden">
+                <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <h3 class="section-title">Catalogo de barrenos</h3>
+                        <p class="catalog-copy">Listado de barrenos disponibles para consulta tecnica y para vincular muestras de profundidad.</p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-600">Consulta operativa</span>
+                </div>
                 <ul id="barrenosList" class="mt-4 space-y-3"></ul>
+                <div id="barrenoDetailPanel" class="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                    <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-800">Detalle de barreno</h4>
+                            <p class="text-sm text-slate-500">Consulta la ficha tecnica completa y el archivo de descripcion del nucleo asociado.</p>
+                        </div>
+                        <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Solo lectura</span>
+                    </div>
+                    <div id="barrenoDetailContent" class="mt-4 text-sm text-slate-500">Seleccione un barreno para ver su detalle.</div>
+                </div>
             </div>
         </section>
     </main>
@@ -560,5 +631,15 @@
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
 
 
