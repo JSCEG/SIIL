@@ -49,6 +49,10 @@ class SiteBreadcrumbs extends HTMLElement {
             ],
             'login_backup.html': [
                 { label: 'Iniciar Sesión' }
+            ],
+            'cuenta.html': [
+                { label: 'Inicio', href: 'index.html' },
+                { label: 'Configuración de Cuenta' }
             ]
         };
 
@@ -96,3 +100,5 @@ class SiteBreadcrumbs extends HTMLElement {
 if (!customElements.get('site-breadcrumbs')) {
     customElements.define('site-breadcrumbs', SiteBreadcrumbs);
 }
+
+

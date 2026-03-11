@@ -141,6 +141,42 @@
     font-family: var(--site-font-body);
 }
 
+.site-user-chevron {
+    margin-left: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--site-color-guinda);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.site-user-info--link {
+    text-decoration: none;
+    padding: 0.3rem 0.15rem 0.3rem 0.75rem;
+    border-radius: var(--site-radius-md);
+    border: 1px solid transparent;
+    background: transparent;
+    transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.site-user-info--link:hover {
+    background-color: rgba(155, 34, 71, 0.06);
+    border-color: rgba(155, 34, 71, 0.16);
+    transform: translateY(-1px);
+}
+
+.site-user-info--link:hover .site-user-name,
+.site-user-info--link:hover .site-user-role {
+    color: var(--site-color-guinda);
+}
+
+.site-user-info--link:hover .site-user-chevron {
+    color: var(--site-color-guinda);
+    transform: translateY(1px);
+}
+
+.site-user-info--link:focus-visible {
+    outline: 2px solid var(--site-color-guinda);
+    outline-offset: 2px;
+}
 /* Botón de Logout */
 .site-btn-logout {
     display: inline-flex;
@@ -291,3 +327,5 @@
 .site-header {
     animation: slideDown 0.3s ease-out;
 }
+
+

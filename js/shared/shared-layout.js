@@ -12,10 +12,10 @@ class SiteHeader extends HTMLElement {
                             <img src="img/litio.png" alt="Litio MX" class="site-logo-litio">
                         </div>
                         <div class="site-user-section">
-                            <div class="site-user-info">
-                                <span data-user-info="name" class="site-user-name">Usuario</span>
+                            <a class="site-user-info site-user-info--link" href="cuenta.html" title="Configuracion de cuenta" aria-label="Ir a configuracion de cuenta">
+                                <span data-user-info="name" class="site-user-name">Usuario <i class="fas fa-chevron-down site-user-chevron" aria-hidden="true"></i></span>
                                 <span data-user-info="role" class="site-user-role">Rol</span>
-                            </div>
+                            </a>
                             <button class="site-btn-logout" data-action="logout" title="Cerrar sesion" type="button" aria-label="Cerrar sesion">
                                 <i class="fas fa-sign-out-alt"></i>
                                 <span>Salir</span>
@@ -183,3 +183,6 @@ class SiteBottomNav extends HTMLElement {
 if (!customElements.get('site-bottom-nav')) {
     customElements.define('site-bottom-nav', SiteBottomNav);
 }
+
+
+
