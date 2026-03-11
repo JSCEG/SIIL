@@ -236,11 +236,14 @@
     }
 
     .site-logo-litio {
-        height: 32px;
+        height: 22px;
     }
 
     .site-user-name {
         font-size: 0.8125rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .site-user-role {
@@ -252,52 +255,60 @@
     }
 
     .site-btn-logout {
-        padding: 0.5rem;
-        min-width: 40px;
+        padding: 0.45rem;
+        min-width: 38px;
+        height: 38px;
+        border-width: 1.5px;
+        flex-shrink: 0;
     }
 }
 
 @media (max-width: 768px) {
     .site-container {
-        padding: 0 1rem;
+        padding: 0 0.75rem;
     }
 
     .site-header-content {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr auto;
         align-items: center;
-        gap: 1rem;
-        padding: 0.75rem 0;
+        gap: 0.75rem;
+        padding: 0.55rem 0;
         min-height: auto;
     }
 
     .site-logo-section {
+        grid-column: 1 / -1;
         justify-content: center;
-        gap: 0.75rem;
+        gap: 0.55rem;
+        flex-wrap: nowrap;
     }
 
     .site-logo-gob,
     .site-logo-sener {
-        height: 40px;
+        height: 30px;
     }
 
     .site-logo-litio {
-        height: 36px;
-        margin-left: 0.25rem;
+        height: 24px;
+        margin-left: 0;
     }
 
     .site-logo-separator {
-        height: 32px;
+        height: 26px;
     }
 
     .site-user-section {
         width: 100%;
         justify-content: space-between;
-        gap: 1rem;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .site-user-info {
         text-align: left;
         flex: 1;
+        min-width: 0;
     }
 
     .site-btn-logout {
@@ -327,5 +338,7 @@
 .site-header {
     animation: slideDown 0.3s ease-out;
 }
+
+
 
 

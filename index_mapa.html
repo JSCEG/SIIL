@@ -53,10 +53,10 @@
         body { padding-bottom: 6rem; }
         .map-page-shell { max-width: 1500px; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
         .page-intro { margin-bottom: 1rem; background: linear-gradient(135deg, rgba(30,91,79,.96), rgba(155,34,71,.94)); color: #fff; border-radius: 1.5rem; padding: 1.4rem 1.5rem; box-shadow: 0 18px 44px rgba(15,23,42,.14); }
-        .page-intro h1 { font-family: 'Merriweather', serif; font-size: clamp(1.9rem, 3vw, 2.8rem); margin-bottom: .55rem; }
+        .page-intro h1 { font-family: 'Merriweather', serif; font-size: clamp(1.9rem, 3vw, 2.8rem); margin-bottom: .55rem; color: #ffffff; text-wrap: balance; }
         .page-intro p { max-width: 68ch; line-height: 1.65; color: rgba(255,255,255,.88); }
         .main-layout { border-radius: 1.5rem; overflow: hidden; border: 1px solid rgba(229,231,235,.9); box-shadow: 0 18px 45px rgba(15,23,42,.08); height: auto; min-height: 780px; background: #fff; }
-        @media (max-width: 900px) { .map-page-shell { padding-inline: .75rem; } .page-intro { border-radius: 1.2rem; } .main-layout { min-height: 640px; } }
+
 
         /* ─── Header institucional ─── */
         .siil-header {
@@ -297,6 +297,8 @@
         #map {
             width: 100%;
             height: 100%;
+            min-height: 560px;
+            background: linear-gradient(180deg, #d9e5ee 0%, #c5d6e3 100%);
         }
 
         /* ─── Expediente Slide Panel ─── */
@@ -481,10 +483,16 @@
 
         /* responsive — ocultar panel lateral en pantallas pequeñas */
         @media (max-width: 900px) {
-            .main-layout { flex-direction: column; }
-            .side-panel { display: flex; width: 100%; min-width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: 55vh; }
-            .map-wrapper { min-height: 60vh; }
-            .expediente-panel { width: 100%; right: -100%; top: 88px; height: calc(100vh - 88px); }
+            .map-page-shell { padding-inline: .5rem; }
+            .page-intro { padding: 1.2rem 1.1rem; }
+            .page-intro h1 { font-size: clamp(1.7rem, 8vw, 2.3rem); line-height: 1.06; }
+            .page-intro p { font-size: 1rem; }
+            .main-layout { flex-direction: column; min-height: auto; }
+            .map-wrapper { order: 1; min-height: 52vh; }
+            #map { min-height: 52vh; }
+            .side-panel { order: 2; display: flex; width: 100%; min-width: 100%; border-right: none; border-top: 1px solid var(--border); max-height: none; }
+            .side-panel-scroll { max-height: none; }
+            .expediente-panel { width: 100%; right: -100%; top: 76px; height: calc(100vh - 76px); }
         }
     </style>
 </head>
@@ -917,6 +925,7 @@ function initMap() {
 
     buildLegend();
     renderMap();
+    setTimeout(() => map.invalidateSize(), 120);
     hideLoader();
 }
 
@@ -1590,9 +1599,17 @@ window.addEventListener('load', () => {
     renderBarrenoList();
     showNotif('7 barrenos · 18 muestras de arcillas cargadas');
 });
+
+window.addEventListener('resize', () => {
+    if (map) {
+        setTimeout(() => map.invalidateSize(), 80);
+    }
+});
 </script>
 </body>
 </html>
+
+
 
 
 
