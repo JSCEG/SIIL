@@ -12,6 +12,7 @@
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Merriweather:wght@700;800&display=swap" rel="stylesheet" />
@@ -76,7 +77,7 @@
             padding-right: 1rem;
             border-right: 1px solid rgba(255,255,255,.3);
         }
-        .siil-header img { height: 28px; filter: brightness(0) invert(1); }
+        .siil-header .logo-band img { height: 28px; filter: brightness(0) invert(1); }
         .siil-header .title-band {
             display: flex; flex-direction: column; line-height: 1.1;
         }
@@ -449,6 +450,362 @@
         }
         .leaflet-popup-tip-container { display: none; }
 
+        /* refinamiento visual institucional */
+        body {
+            background:
+                radial-gradient(circle at 12% 14%, rgba(155,34,71,.08), transparent 26%),
+                radial-gradient(circle at 88% 10%, rgba(165,127,44,.08), transparent 24%),
+                radial-gradient(circle at 52% 92%, rgba(30,91,79,.07), transparent 25%),
+                var(--bg);
+        }
+        .page-intro {
+            background: linear-gradient(135deg, rgba(30,91,79,.97), rgba(155,34,71,.94));
+            border-radius: 1.75rem;
+            padding: 1.5rem 1.65rem;
+            box-shadow: 0 22px 50px rgba(15,23,42,.14);
+            position: relative;
+            overflow: hidden;
+        }
+        .page-intro::after {
+            content: "";
+            position: absolute;
+            inset: auto -10% -55% auto;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(255,255,255,.24) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
+        }
+        .main-layout {
+            border-radius: 1.75rem;
+            border: 1px solid rgba(255,255,255,.78);
+            box-shadow: 0 24px 60px rgba(15,23,42,.10);
+            background: rgba(255,255,255,.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+        .side-panel {
+            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(249,250,251,.98));
+            border-right: 1px solid rgba(229,231,235,.9);
+            box-shadow: inset -1px 0 0 rgba(255,255,255,.6);
+        }
+        .filter-section h4 { display: flex; align-items: center; gap: .45rem; }
+        .filter-row select, .filter-row input {
+            border-radius: 12px;
+            background: rgba(255,255,255,.92);
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .filter-row select:focus, .filter-row input:focus { box-shadow: 0 0 0 4px rgba(155,34,71,.10); }
+        .btn-filter { border-radius: 12px; transition: all .18s ease; }
+        .btn-filter.primary {
+            background: linear-gradient(135deg, var(--guinda), var(--guinda-dark));
+            box-shadow: 0 10px 22px rgba(155,34,71,.18);
+        }
+        .btn-filter.primary:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(155,34,71,.24); }
+        .btn-filter.secondary { background: rgba(255,255,255,.92); }
+        .btn-filter.secondary:hover { color: var(--guinda); }
+        .chip { padding: 5px 10px; transition: all .18s ease; }
+        .chip:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(15,23,42,.07); }
+        .kpi-card {
+            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94));
+            border: 1px solid rgba(229,231,235,.9);
+            border-radius: 18px;
+            transition: box-shadow .15s, transform .15s;
+        }
+        .kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .chart-box {
+            background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(249,250,251,.94));
+            border: 1px solid rgba(229,231,235,.9);
+            border-radius: 16px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+        }
+        .barreno-item {
+            border: 1px solid rgba(229,231,235,.95);
+            border-radius: 16px;
+            transition: all .18s ease;
+            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(249,250,251,.96));
+        }
+        .barreno-item:hover {
+            background: linear-gradient(180deg, rgba(245,230,235,.92), rgba(255,255,255,.98));
+            border-color: rgba(155,34,71,.34);
+            box-shadow: var(--shadow-sm);
+        }
+        .barreno-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--verde), var(--verde-dark));
+            box-shadow: 0 10px 20px rgba(30,91,79,.2);
+        }
+        .expediente-panel {
+            background: rgba(255,255,255,.92);
+            border-left: 1px solid rgba(229,231,235,.88);
+            box-shadow: -8px 0 32px rgba(15,23,42,.14);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .exp-header { background: linear-gradient(135deg, var(--verde), var(--guinda)); }
+        .exp-tabs { background: rgba(243,244,246,.88); }
+        .muestra-card {
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(249,250,251,.95), rgba(255,255,255,.94));
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 18px !important;
+            box-shadow: 0 18px 44px rgba(15,23,42,.16) !important;
+            border: 1px solid rgba(229,231,235,.88) !important;
+            background: rgba(255,255,255,.98) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .siil-popup-card { font-family: 'Noto Sans', sans-serif; overflow: hidden; color: var(--text); }
+        .siil-popup-card--barreno { width: 292px; }
+        .siil-popup-card--muestra { width: 282px; }
+        .siil-popup-head { padding: 12px 14px; color: #fff; position: relative; overflow: hidden; }
+        .siil-popup-head::after {
+            content: "";
+            position: absolute;
+            top: -46px;
+            right: -44px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(255,255,255,.26) 0%, rgba(255,255,255,0) 72%);
+        }
+        .siil-popup-head--barreno { background: linear-gradient(135deg, var(--verde), var(--verde-dark)); }
+        .siil-popup-head--superficie { background: linear-gradient(135deg, var(--dorado), #c69433); }
+        .siil-popup-head--nucleo { background: linear-gradient(135deg, var(--guinda), var(--guinda-dark)); }
+        .siil-popup-kicker { font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.72); margin-bottom: 4px; }
+        .siil-popup-title { font-size: 12px; font-weight: 800; line-height: 1.35; }
+        .siil-popup-sub { color: rgba(255,255,255,.78); font-size: 10px; margin-top: 3px; }
+        .siil-popup-body { padding: 12px 14px 14px; background: rgba(255,255,255,.98); }
+        .siil-popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 10px; }
+        .siil-popup-field-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; margin-bottom: 2px; }
+        .siil-popup-field-value { font-size: 10px; font-weight: 700; color: var(--text); line-height: 1.35; }
+        .siil-popup-note { border-radius: 12px; padding: 9px 10px; margin-bottom: 10px; font-size: 10px; line-height: 1.45; border-left: 4px solid transparent; }
+        .siil-popup-note--barreno { background: rgba(30,91,79,.08); color: var(--verde-dark); border-left-color: var(--verde); }
+        .siil-popup-note--muestra { background: rgba(155,34,71,.07); color: var(--guinda-dark); border-left-color: var(--guinda); }
+        .siil-popup-actions { display: flex; justify-content: center; margin-top: 2px; }
+        .siil-popup-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Noto Sans', sans-serif;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, var(--guinda), var(--guinda-dark));
+            box-shadow: 0 12px 24px rgba(155,34,71,.18);
+        }
+        .siil-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; font-size: 9px; font-weight: 800; margin-bottom: 8px; }
+        .siil-pill--superficie { background: rgba(165,127,44,.14); color: var(--dorado-dark); }
+        .siil-pill--nucleo { background: rgba(155,34,71,.12); color: var(--guinda); }
+        .siil-borehole-icon,
+        .siil-surface-icon,
+        .siil-core-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            box-shadow: 0 16px 26px rgba(15,23,42,.22);
+            border: 2.5px solid rgba(255,255,255,.92);
+        }
+        .siil-borehole-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--verde), var(--verde-dark));
+            flex-direction: column;
+            gap: 2px;
+        }
+        .siil-borehole-icon::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -8px;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 9px solid var(--verde-dark);
+        }
+        .siil-surface-icon,
+        .siil-core-icon { width: 32px; height: 32px; }
+        .siil-surface-icon { border-radius: 999px; background: radial-gradient(circle at 35% 30%, #c89b47, var(--dorado)); }
+        .siil-core-icon {
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--guinda), var(--guinda-dark));
+            transform: rotate(45deg);
+        }
+        .siil-icon-glyph { display: flex; align-items: center; justify-content: center; }
+        .siil-icon-glyph--core { transform: rotate(-45deg); }
+        .siil-borehole-id { font-size: 7px; line-height: 1; font-weight: 800; letter-spacing: .04em; }
+        .siil-map-legend {
+            background: rgba(255,255,255,.95);
+            border-radius: 18px;
+            border: 1px solid rgba(229,231,235,.9);
+            box-shadow: 0 18px 40px rgba(15,23,42,.14);
+            padding: 12px 14px;
+            min-width: 188px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .siil-map-legend__title { font-size: 10px; font-weight: 800; color: var(--guinda); margin-bottom: 9px; text-transform: uppercase; letter-spacing: .14em; }
+        .siil-map-legend__item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text); }
+        .siil-map-legend__item + .siil-map-legend__item { margin-top: 7px; }
+        .siil-map-legend__swatch {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            border: 1.5px solid rgba(255,255,255,.92);
+            box-shadow: 0 8px 16px rgba(15,23,42,.14);
+        }
+        .siil-map-legend__swatch--barreno { border-radius: 5px; background: linear-gradient(135deg, var(--verde), var(--verde-dark)); }
+        .siil-map-legend__swatch--superficie { border-radius: 999px; background: radial-gradient(circle at 35% 30%, #c89b47, var(--dorado)); }
+        .siil-map-legend__swatch--nucleo { border-radius: 5px; background: linear-gradient(135deg, var(--guinda), var(--guinda-dark)); transform: rotate(45deg); }
+        .leaflet-control-layers {
+            border: 1px solid rgba(229,231,235,.92) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 20px 44px rgba(15,23,42,.14) !important;
+            overflow: hidden;
+            background: rgba(255,255,255,.95) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .leaflet-control-layers-toggle { width: 42px !important; height: 42px !important; background-size: 18px 18px !important; }
+        .leaflet-control-layers-expanded {
+            padding: 14px 14px 10px !important;
+            font-family: 'Noto Sans', sans-serif;
+            color: var(--text);
+            min-width: 210px;
+        }
+        .leaflet-control-layers-base label,
+        .leaflet-control-layers-overlays label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 2px;
+            color: var(--text);
+        }
+        .leaflet-control-layers-base input { accent-color: var(--guinda); }
+        .graticule-labels-control { pointer-events: none; position: absolute; inset: 0; z-index: 410; font-family: 'Noto Sans', sans-serif; }
+        .graticule-labels-top, .graticule-labels-bottom, .graticule-labels-left, .graticule-labels-right { position: absolute; }
+        .graticule-labels-top, .graticule-labels-bottom { left: 44px; right: 44px; height: 22px; }
+        .graticule-labels-top { top: 8px; }
+        .graticule-labels-bottom { bottom: 12px; }
+        .graticule-labels-left, .graticule-labels-right { top: 44px; bottom: 44px; width: 44px; }
+        .graticule-labels-left { left: 6px; }
+        .graticule-labels-right { right: 6px; }
+        .graticule-label-item { position: absolute; transform: translate(-50%, -50%); padding: 2px 6px; border-radius: 999px; background: rgba(255,255,255,.78); color: var(--guinda); font-size: 10px; font-weight: 700; box-shadow: 0 6px 16px rgba(15,23,42,.12); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .map-logo-stack { position: absolute; right: 14px; bottom: 18px; z-index: 420; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .map-logo-chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.88); border: 1px solid rgba(229,231,235,.9); box-shadow: 0 12px 26px rgba(15,23,42,.12); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .map-logo-chip img { height: 18px; width: auto; display: block; }
+        .map-logo-chip span { font-size: 10px; font-weight: 800; color: var(--guinda); letter-spacing: .08em; text-transform: uppercase; }
+        .leaflet-bar a {
+            width: 38px !important;
+            height: 38px !important;
+            line-height: 38px !important;
+            border-radius: 12px !important;
+            border-bottom: 1px solid rgba(229,231,235,.85) !important;
+            color: var(--guinda) !important;
+        }
+        .leaflet-bar {
+            border: 1px solid rgba(229,231,235,.92) !important;
+            border-radius: 14px !important;
+            overflow: hidden;
+            box-shadow: 0 18px 36px rgba(15,23,42,.14) !important;
+        }
+        .marker-cluster-small,
+        .marker-cluster-medium,
+        .marker-cluster-large { background: transparent !important; }
+        .marker-cluster div {
+            width: 40px !important;
+            height: 40px !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
+            border-radius: 999px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Noto Sans', sans-serif;
+            font-weight: 800;
+            color: #fff;
+            border: 3px solid rgba(255,255,255,.92);
+            box-shadow: 0 14px 26px rgba(15,23,42,.18);
+        }
+        .marker-cluster-small div { background: linear-gradient(135deg, var(--verde), #2b7a6a) !important; }
+        .marker-cluster-medium div { background: linear-gradient(135deg, var(--dorado), #c38f35) !important; }
+        .marker-cluster-large div { background: linear-gradient(135deg, var(--guinda), var(--guinda-dark)) !important; }
+
+        .map-top-toolbar {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            z-index: 650;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .map-top-toolbar__group {
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+        }
+        .map-quick-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(229,231,235,.92);
+            background: rgba(255,255,255,.94);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Noto Sans', sans-serif;
+            box-shadow: 0 12px 24px rgba(15,23,42,.12);
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .map-quick-btn:hover {
+            color: var(--guinda);
+            transform: translateY(-1px);
+        }
+        .map-export-menu {
+            min-width: 190px;
+            background: rgba(255,255,255,.96);
+            border: 1px solid rgba(229,231,235,.92);
+            border-radius: 18px;
+            box-shadow: 0 18px 36px rgba(15,23,42,.14);
+            padding: 8px;
+            pointer-events: auto;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .map-export-menu__item {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Noto Sans', sans-serif;
+            cursor: pointer;
+        }
+        .map-export-menu__item:hover {
+            background: rgba(155,34,71,.08);
+            color: var(--guinda);
+        }
+
         /* carga overlay */
         .map-loading {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -624,6 +981,25 @@
     <div class="map-wrapper">
         <div id="map"></div>
 
+        <div class="map-top-toolbar">
+            <div class="map-top-toolbar__group">
+                <button class="map-quick-btn" id="btn-reset-view" type="button" title="Centrar vista nacional">
+                    <i class="bi bi-crosshair"></i>
+                    <span>Inicio</span>
+                </button>
+                <button class="map-quick-btn" id="btn-toggle-export" type="button" title="Opciones de exportación">
+                    <i class="bi bi-download"></i>
+                    <span>Exportar</span>
+                </button>
+            </div>
+            <div class="map-export-menu" id="map-export-menu" hidden>
+                <button class="map-export-menu__item" id="btn-export-png" type="button">
+                    <i class="bi bi-file-earmark-image"></i>
+                    <span>Descargar PNG</span>
+                </button>
+            </div>
+        </div>
+
         <!-- loader -->
         <div class="map-loading" id="map-loading">
             <div class="spinner"></div>
@@ -632,6 +1008,17 @@
 
         <!-- notificación flotante -->
         <div class="map-notification" id="map-notif"></div>
+
+        <div class="map-logo-stack" id="map-logo-stack">
+            <div class="map-logo-chip" id="map-logo-sener">
+                <img src="img/logo_sener.png" alt="SENER">
+                <span>SENER</span>
+            </div>
+            <div class="map-logo-chip" id="map-logo-litio">
+                <img src="img/litio.png" alt="Litio MX">
+                <span>Litio MX</span>
+            </div>
+        </div>
     </div>
 
 </div><!-- /main-layout -->
@@ -674,6 +1061,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="config.js"></script>
 <script src="js/shared/preloader.js"></script>
 <script src="js/shared/shared-layout.js"></script>
@@ -894,37 +1283,344 @@ let activeFilters = { estado: '', fuente: '', search: '' };
 let filteredBarrenos = [...DEMO_BARRENOS];
 let filteredMuestras = [...DEMO_MUESTRAS];
 let chartTipo = null, chartLito = null, chartTCR = null;
+let mapContextLayers = {};
+const MEXICO_BOUNDS = L.latLngBounds([14.0, -118.0], [33.5, -86.0]);
+const GRATICULE_PADDING_DEGREES = 10;
+const GRATICULE_BOUNDS = L.latLngBounds(
+    [MEXICO_BOUNDS.getSouth() - GRATICULE_PADDING_DEGREES, MEXICO_BOUNDS.getWest() - GRATICULE_PADDING_DEGREES],
+    [MEXICO_BOUNDS.getNorth() + GRATICULE_PADDING_DEGREES, MEXICO_BOUNDS.getEast() + GRATICULE_PADDING_DEGREES]
+);
+const MAP_NAV_BOUNDS = L.latLngBounds([12.5, -120.0], [35.0, -84.0]);
+const DEFAULT_MAP_CENTER = [23.6345, -102.5528];
+const DEFAULT_MAP_ZOOM = 5.2;
+const MAPTILER_KEY = 'xRR3xCujdkUjxkDqlNTG';
+const MAPTILER_STYLE_SENER_LIGHT = '0198a9af-dc7c-79d3-8316-a80767ad1d0f';
+
+
+const MAP_REFERENCE_URLS = {
+    mexicoOutline: 'https://cdn.sassoapps.com/Mapas/mexico.geojson',
+    marinas: 'https://cdn.sassoapps.com/Mapas/Electricidad/regionmarinamx.geojson',
+    ramsar: 'https://cdn.sassoapps.com/Gabvy/ramsar.geojson',
+    anp: 'https://cdn.sassoapps.com/Mapas/ANP2025.geojson'
+};
+
+function createGraticuleLayer() {
+    const layer = L.layerGroup();
+    const majorLatitudes = [];
+    const majorLongitudes = [];
+
+    for (let lat = Math.floor(GRATICULE_BOUNDS.getSouth() / 5) * 5; lat <= Math.ceil(GRATICULE_BOUNDS.getNorth() / 5) * 5; lat += 5) {
+        const latLine = [];
+        for (let lng = GRATICULE_BOUNDS.getWest() - 5; lng <= GRATICULE_BOUNDS.getEast() + 5; lng += 0.5) latLine.push([lat, lng]);
+        L.polyline(latLine, {
+            color: '#d8e2ec',
+            weight: 1.1,
+            opacity: 0.55,
+            interactive: false,
+            dashArray: '5 8'
+        }).addTo(layer);
+        majorLatitudes.push(lat);
+    }
+    for (let lng = Math.floor(GRATICULE_BOUNDS.getWest() / 5) * 5; lng <= Math.ceil(GRATICULE_BOUNDS.getEast() / 5) * 5; lng += 5) {
+        const lngLine = [];
+        for (let lat = GRATICULE_BOUNDS.getSouth() - 5; lat <= GRATICULE_BOUNDS.getNorth() + 5; lat += 0.5) lngLine.push([lat, lng]);
+        L.polyline(lngLine, {
+            color: '#d8e2ec',
+            weight: 1.1,
+            opacity: 0.55,
+            interactive: false,
+            dashArray: '5 8'
+        }).addTo(layer);
+        majorLongitudes.push(lng);
+    }
+
+    layer._gridMeta = { latitudes: majorLatitudes, longitudes: majorLongitudes };
+    return layer;
+}
+
+const GraticuleLabels = L.Layer.extend({
+    initialize(options = {}) {
+        this._gridMeta = options.gridMeta || { latitudes: [], longitudes: [] };
+    },
+    onAdd(mapInstance) {
+        this._map = mapInstance;
+        this._container = L.DomUtil.create('div', 'graticule-labels-control', mapInstance.getContainer());
+        this._top = L.DomUtil.create('div', 'graticule-labels-top', this._container);
+        this._bottom = L.DomUtil.create('div', 'graticule-labels-bottom', this._container);
+        this._left = L.DomUtil.create('div', 'graticule-labels-left', this._container);
+        this._right = L.DomUtil.create('div', 'graticule-labels-right', this._container);
+        this._refresh = this._update.bind(this);
+        mapInstance.on('move zoom resize', this._refresh);
+        this._update();
+    },
+    onRemove(mapInstance) {
+        mapInstance.off('move zoom resize', this._refresh);
+        if (this._container && this._container.parentNode) this._container.parentNode.removeChild(this._container);
+    },
+    _formatLat(lat) { return `${Math.abs(lat)}°${lat >= 0 ? 'N' : 'S'}`; },
+    _formatLng(lng) { return `${Math.abs(lng)}°${lng >= 0 ? 'E' : 'W'}`; },
+    _renderItems(target, items) {
+        target.innerHTML = '';
+        items.forEach(item => {
+            const el = L.DomUtil.create('div', 'graticule-label-item', target);
+            if (item.left != null) el.style.left = `${item.left}px`;
+            if (item.top != null) el.style.top = `${item.top}px`;
+            el.textContent = item.label;
+        });
+    },
+    _update() {
+        if (!this._map || !this._gridMeta) return;
+        const size = this._map.getSize();
+        const topItems = [];
+        const bottomItems = [];
+        const leftItems = [];
+        const rightItems = [];
+        this._gridMeta.longitudes.forEach(lng => {
+            const point = this._map.latLngToContainerPoint([MEXICO_BOUNDS.getNorth(), lng]);
+            if (point.x >= 0 && point.x <= size.x) {
+                topItems.push({ left: point.x - 44, top: 10, label: this._formatLng(lng) });
+                bottomItems.push({ left: point.x - 44, top: 10, label: this._formatLng(lng) });
+            }
+        });
+        this._gridMeta.latitudes.forEach(lat => {
+            const point = this._map.latLngToContainerPoint([lat, MEXICO_BOUNDS.getWest()]);
+            if (point.y >= 0 && point.y <= size.y) {
+                leftItems.push({ left: 22, top: point.y, label: this._formatLat(lat) });
+                rightItems.push({ left: 22, top: point.y, label: this._formatLat(lat) });
+            }
+        });
+        this._renderItems(this._top, topItems);
+        this._renderItems(this._bottom, bottomItems);
+        this._renderItems(this._left, leftItems);
+        this._renderItems(this._right, rightItems);
+    }
+});
+
+function createContextPopup(title, subtitle, detail = '') {
+    return `
+        <div class="siil-popup-card siil-popup-card--muestra">
+            <div class="siil-popup-head siil-popup-head--superficie">
+                <div class="siil-popup-kicker">Contexto territorial</div>
+                <div class="siil-popup-title">${title}</div>
+                <div class="siil-popup-sub">${subtitle}</div>
+            </div>
+            ${detail ? `<div class="siil-popup-meta"><span>${detail}</span></div>` : ''}
+        </div>
+    `;
+}
+
+function bindOverlayPopup(feature, layer, fallbackTitle, fallbackSubtitle, detailFactory) {
+    const props = feature.properties || {};
+    const title = props.NOMBRE || props.nombre || props.name || props.RAMSAR || fallbackTitle;
+    const subtitle = props.CATEGORIA || props.categoria || props.TIPO || props.tipo || fallbackSubtitle;
+    const detail = typeof detailFactory === 'function' ? detailFactory(props) : '';
+    layer.bindPopup(createContextPopup(title, subtitle, detail), { maxWidth: 280, className: 'siil-popup' });
+}
+
+async function loadGeoJsonOverlay(url, options) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`No se pudo cargar ${url} (${response.status})`);
+    }
+    const data = await response.json();
+    return L.geoJSON(data, options);
+}
+
+async function createContextLayers() {
+    mapContextLayers.graticule = createGraticuleLayer();
+    mapContextLayers.graticuleLabels = new GraticuleLabels({ gridMeta: mapContextLayers.graticule._gridMeta });
+
+    const tasks = [
+        loadGeoJsonOverlay(MAP_REFERENCE_URLS.marinas, {
+            style: {
+                color: '#3b9f6f',
+                weight: 1.4,
+                fillColor: '#4fc3b6',
+                fillOpacity: 0.14
+            },
+            onEachFeature: (feature, layer) => bindOverlayPopup(feature, layer, 'Región marina', 'Aguas litorales')
+        }).then(layer => {
+            mapContextLayers.waterBodies = layer;
+        }),
+        loadGeoJsonOverlay(MAP_REFERENCE_URLS.ramsar, {
+            style: {
+                color: '#6d4c41',
+                weight: 1.25,
+                fillColor: '#8d6e63',
+                fillOpacity: 0.14
+            },
+            onEachFeature: (feature, layer) => bindOverlayPopup(feature, layer, 'Sitio Ramsar', 'Humedal protegido', props => {
+                const estado = props.ESTADO || props.estado || '';
+                const municipio = props.MUNICIPIO || props.municipios || '';
+                return [estado, municipio].filter(Boolean).join(' • ');
+            })
+        }).then(layer => {
+            mapContextLayers.ramsar = layer;
+        }),
+        loadGeoJsonOverlay(MAP_REFERENCE_URLS.anp, {
+            style: {
+                color: '#2e7d32',
+                weight: 1.35,
+                fillColor: '#66bb6a',
+                fillOpacity: 0.10
+            },
+            onEachFeature: (feature, layer) => bindOverlayPopup(feature, layer, 'ANP', 'Recurso natural', props => {
+                const categoria = props.CATEGORIA || props.categoria || '';
+                const entidad = props.ENTIDAD || props.entidad || '';
+                return [categoria, entidad].filter(Boolean).join(' • ');
+            })
+        }).then(layer => {
+            mapContextLayers.anp = layer;
+        }),
+        loadGeoJsonOverlay(MAP_REFERENCE_URLS.mexicoOutline, {}).then(layer => {
+            const data = layer.toGeoJSON();
+            if (typeof proj4 !== 'undefined') {
+                const mexicoProj = '+proj=lcc +lat_1=17.5 +lat_2=29.5 +lat_0=12 +lon_0=-102 +x_0=2500000 +y_0=0 +ellps=GRS80 +units=m +no_defs';
+                const convert = coords => typeof coords[0] === 'number' ? proj4(mexicoProj, 'EPSG:4326', coords) : coords.map(convert);
+                data.features.forEach(feature => {
+                    if (feature.geometry && feature.geometry.coordinates) {
+                        feature.geometry.coordinates = convert(feature.geometry.coordinates);
+                    }
+                });
+            }
+            mapContextLayers.mexicoOutline = L.geoJSON(data, {
+                style: { color: '#2f3a4a', weight: 1.35, opacity: 0.78, fillOpacity: 0 },
+                interactive: false
+            });
+        })
+    ];
+
+    const results = await Promise.allSettled(tasks);
+    results.forEach(result => {
+        if (result.status === 'rejected') {
+            console.warn('No se pudo cargar una capa contextual:', result.reason);
+        }
+    });
+
+    mapContextLayers.senerLogo = L.layerGroup();
+    mapContextLayers.litioLogo = L.layerGroup();
+}
+
+function updateMapLogoVisibility() {
+    const senerLogo = document.getElementById('map-logo-sener');
+    const litioLogo = document.getElementById('map-logo-litio');
+    if (senerLogo) senerLogo.style.display = map?.hasLayer(mapContextLayers.senerLogo) ? '' : 'none';
+    if (litioLogo) litioLogo.style.display = map?.hasLayer(mapContextLayers.litioLogo) ? '' : 'none';
+}
+
+function toggleExportMenu() {
+    const menu = document.getElementById('map-export-menu');
+    if (!menu) return;
+    menu.hidden = !menu.hidden;
+}
+
+async function exportMapToPNG() {
+    const mapElement = document.querySelector('.map-wrapper');
+    if (!mapElement || typeof html2canvas === 'undefined') {
+        showNotif('La exportación PNG no está disponible.');
+        return;
+    }
+
+    showNotif('Generando imagen PNG...');
+    const canvas = await html2canvas(mapElement, {
+        useCORS: true,
+        backgroundColor: '#f3f4f6',
+        scale: 2
+    });
+    const link = document.createElement('a');
+    link.download = `sener-mapa-arcillas-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    document.getElementById('map-export-menu').hidden = true;
+    showNotif('PNG descargado correctamente.');
+}
+
+function setupMapToolbar() {
+    document.getElementById('btn-reset-view')?.addEventListener('click', () => {
+        map.fitBounds(MEXICO_BOUNDS, { padding: [24, 24], animate: true });
+    });
+    document.getElementById('btn-toggle-export')?.addEventListener('click', toggleExportMenu);
+    document.getElementById('btn-export-png')?.addEventListener('click', exportMapToPNG);
+    document.addEventListener('click', (event) => {
+        const menu = document.getElementById('map-export-menu');
+        const button = document.getElementById('btn-toggle-export');
+        if (!menu || menu.hidden) return;
+        if (menu.contains(event.target) || button?.contains(event.target)) return;
+        menu.hidden = true;
+    });
+}
+
 
 
 /* ══════════════════════════════════════════════════════
    INICIALIZACIÓN DEL MAPA
 ══════════════════════════════════════════════════════ */
-function initMap() {
+async function initMap() {
     map = L.map('map', {
-        center: [26.5, -108.0],
-        zoom: 5,
-        zoomControl: true
+        center: DEFAULT_MAP_CENTER,
+        zoom: DEFAULT_MAP_ZOOM,
+        minZoom: 4.5,
+        maxZoom: 18,
+        maxBounds: MAP_NAV_BOUNDS,
+        maxBoundsViscosity: 1,
+        zoomControl: true,
+        worldCopyJump: false
     });
 
     const baseLayers = {
-        'Claro (CartoDB)': L.tileLayer(
+        'SENER Light': L.tileLayer(
+            `https://api.maptiler.com/maps/${MAPTILER_STYLE_SENER_LIGHT}/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`,
+            { attribution: '© MapTiler · OpenStreetMap', maxZoom: 18, crossOrigin: 'anonymous' }
+        ),
+        'Positron (Claro)': L.tileLayer(
             'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-            { attribution: '© CartoDB · OSM', maxZoom: 19 }
+            { attribution: '© Carto · OpenStreetMap', maxZoom: 19, crossOrigin: 'anonymous' }
         ),
-        'Satélite (ESRI)': L.tileLayer(
+        'Voyager (Colores)': L.tileLayer(
+            'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+            { attribution: '© Carto · OpenStreetMap', maxZoom: 19, crossOrigin: 'anonymous' }
+        ),
+        'Satelital (ESRI)': L.tileLayer(
             'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-            { attribution: '© Esri', maxZoom: 19 }
-        ),
-        'Terreno (Stadia)': L.tileLayer(
-            'https://tiles.stadiamaps.com/tiles/stamen_terrain_background/{z}/{x}/{y}{r}.png',
-            { attribution: '© Stadia Maps', maxZoom: 18 }
+            { attribution: '© Esri', maxZoom: 19, crossOrigin: 'anonymous' }
         )
     };
-    baseLayers['Claro (CartoDB)'].addTo(map);
-    L.control.layers(baseLayers, {}, { position: 'topright', collapsed: true }).addTo(map);
+    baseLayers['Satelital (ESRI)'].addTo(map);
+
+    await createContextLayers();
+    map.fitBounds(MEXICO_BOUNDS, { padding: [24, 24] });
+    mapContextLayers.graticule.addTo(map);
+    mapContextLayers.graticuleLabels.addTo(map);
+    mapContextLayers.mexicoOutline?.addTo(map);
+    mapContextLayers.senerLogo.addTo(map);
+    mapContextLayers.litioLogo.addTo(map);
+    updateMapLogoVisibility();
+
+    const overlays = {
+        'Contorno de Mexico': mapContextLayers.mexicoOutline || L.layerGroup(),
+        'Retícula (Lat/Lon)': mapContextLayers.graticule,
+        'Regiones Marinas': mapContextLayers.waterBodies || L.layerGroup(),
+        'Sitios Ramsar': mapContextLayers.ramsar || L.layerGroup(),
+        'Areas naturales protegidas': mapContextLayers.anp || L.layerGroup(),
+        'Logo SENER': mapContextLayers.senerLogo,
+        'Logo Litio MX': mapContextLayers.litioLogo
+    };
+
+    L.control.layers(baseLayers, overlays, { position: 'topright', collapsed: true }).addTo(map);
+    map.on('overlayadd overlayremove', event => {
+        updateMapLogoVisibility();
+        if (event.layer === mapContextLayers.graticule) {
+            if (map.hasLayer(mapContextLayers.graticule)) {
+                mapContextLayers.graticuleLabels.addTo(map);
+            } else if (map.hasLayer(mapContextLayers.graticuleLabels)) {
+                map.removeLayer(mapContextLayers.graticuleLabels);
+            }
+        }
+    });
 
     buildLegend();
     renderMap();
+    setupMapToolbar();
     setTimeout(() => map.invalidateSize(), 120);
     hideLoader();
 }
@@ -936,64 +1632,52 @@ function iconBarreno(id) {
     const short = id.split('-').slice(-1)[0];
     return L.divIcon({
         className: '',
-        html: `<div style="
-            width:34px;height:34px;border-radius:8px;
-            background:#1E5B4F;border:2px solid #fff;
-            box-shadow:0 2px 8px rgba(0,0,0,.3);
-            display:flex;flex-direction:column;align-items:center;justify-content:center;
-            font-family:'Noto Sans',sans-serif;cursor:pointer;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="white" stroke-width="2.5" style="flex-shrink:0">
-                <path d="M12 2L8 6h3v4l-3 3 1 1 3-3 3 3 1-1-3-3V6h3L12 2z"/>
-                <line x1="12" y1="13" x2="12" y2="22"/>
-                <line x1="8"  y1="22" x2="16" y2="22"/>
-            </svg>
-            <span style="color:#fff;font-size:7px;font-weight:800;line-height:1;margin-top:1px">${short}</span>
-        </div>
-        <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #1E5B4F;margin:0 auto;"></div>`,
-        iconSize: [34, 41],
-        iconAnchor: [17, 41],
-        popupAnchor: [0, -41]
+        html: `<div class="siil-borehole-icon">
+            <span class="siil-icon-glyph">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="white" stroke-width="2.5">
+                    <path d="M12 2L8 6h3v4l-3 3 1 1 3-3 3 3 1-1-3-3V6h3L12 2z"/>
+                    <line x1="12" y1="13" x2="12" y2="22"/>
+                    <line x1="8" y1="22" x2="16" y2="22"/>
+                </svg>
+            </span>
+            <span class="siil-borehole-id">${short}</span>
+        </div>`,
+        iconSize: [38, 47],
+        iconAnchor: [19, 47],
+        popupAnchor: [0, -44]
     });
 }
 
 function iconSuperficie() {
     return L.divIcon({
         className: '',
-        html: `<div style="
-            width:28px;height:28px;border-radius:50%;
-            background:#A57F2C;border:2.5px solid #fff;
-            box-shadow:0 2px 6px rgba(0,0,0,.25);
-            display:flex;align-items:center;justify-content:center;
-            font-family:'Noto Sans',sans-serif;cursor:pointer;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="white">
-                <path d="M2 20 Q6 12 12 14 Q18 16 22 8 L22 20 Z"/>
-            </svg>
+        html: `<div class="siil-surface-icon">
+            <span class="siil-icon-glyph">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="white">
+                    <path d="M2 20 Q6 12 12 14 Q18 16 22 8 L22 20 Z"/>
+                </svg>
+            </span>
         </div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-        popupAnchor: [0, -14]
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -15]
     });
 }
 
 function iconNucleo() {
     return L.divIcon({
         className: '',
-        html: `<div style="
-            width:28px;height:28px;border-radius:6px;
-            background:#9B2247;border:2.5px solid #fff;
-            box-shadow:0 2px 6px rgba(0,0,0,.25);
-            display:flex;align-items:center;justify-content:center;
-            font-family:'Noto Sans',sans-serif;cursor:pointer;
-            transform:rotate(45deg);">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="white" style="transform:rotate(-45deg)">
-                <circle cx="12" cy="12" r="4"/>
-                <line x1="12" y1="2" x2="12" y2="8" stroke="white" stroke-width="2"/>
-                <line x1="12" y1="16" x2="12" y2="22" stroke="white" stroke-width="2"/>
-            </svg>
+        html: `<div class="siil-core-icon">
+            <span class="siil-icon-glyph siil-icon-glyph--core">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="white">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v6M12 16v6" stroke="white" stroke-width="2"></path>
+                </svg>
+            </span>
         </div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-        popupAnchor: [0, -14]
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -15]
     });
 }
 
@@ -1004,30 +1688,25 @@ function popupBarreno(b) {
     const mCount = DEMO_MUESTRAS.filter(m => m.referencia_barreno_id === b.id).length;
     const tcrPct = b.tcr ? (b.tcr * 100).toFixed(1) + '%' : 'N/D';
     return `
-    <div style="font-family:'Noto Sans',sans-serif;width:280px;overflow:hidden;">
-        <div style="background:#1E5B4F;padding:10px 12px;">
-            <div style="color:#fff;font-size:12px;font-weight:700">${b.id}</div>
-            <div style="color:rgba(255,255,255,.75);font-size:10px;margin-top:2px">${b.municipio}, ${b.estado}</div>
+    <div class="siil-popup-card siil-popup-card--barreno">
+        <div class="siil-popup-head siil-popup-head--barreno">
+            <div class="siil-popup-kicker">Barreno</div>
+            <div class="siil-popup-title">${b.id}</div>
+            <div class="siil-popup-sub">${b.municipio}, ${b.estado}</div>
         </div>
-        <div style="padding:10px 12px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+        <div class="siil-popup-body">
+            <div class="siil-popup-grid">
                 ${popField('Proyecto', b.proyecto.length > 30 ? b.proyecto.substring(0,30)+'…' : b.proyecto)}
                 ${popField('Responsable', b.responsable)}
                 ${popField('Tipo barrenación', b.tipo_barrenacion)}
                 ${popField('Longitud perforada', b.longitud_perforada + ' m')}
-                ${popField('TCR (recuperación)', tcrPct)}
+                ${popField('TCR', tcrPct)}
                 ${popField('Muestras núcleo', mCount + ' registradas')}
             </div>
-            <div style="background:#f0faf7;border-radius:6px;padding:7px 8px;margin-bottom:8px;font-size:10px;color:#1E5B4F;border-left:3px solid #1E5B4F">
-                <strong>Litología:</strong> ${b.litologia_local}
-            </div>
-            <div style="text-align:center">
-                <button onclick="openExpediente('${b.id}','barreno')" style="
-                    background:#9B2247;color:#fff;border:none;
-                    padding:6px 16px;border-radius:6px;
-                    font-size:11px;font-weight:600;cursor:pointer;
-                    font-family:'Noto Sans',sans-serif;">
-                    <i class='bi bi-folder2-open'></i> Ver Expediente
+            <div class="siil-popup-note siil-popup-note--barreno"><strong>Litología:</strong> ${b.litologia_local}</div>
+            <div class="siil-popup-actions">
+                <button onclick="openExpediente('${b.id}','barreno')" class="siil-popup-btn">
+                    <i class='bi bi-folder2-open'></i> Ver expediente
                 </button>
             </div>
         </div>
@@ -1035,38 +1714,32 @@ function popupBarreno(b) {
 }
 
 function popupMuestra(m) {
-    const tipoLabel = m.origen_arcilla === 'Superficie' ? 'Superficie' : 'Núcleo';
-    const tipoColor = m.origen_arcilla === 'Superficie' ? '#A57F2C' : '#9B2247';
+    const esSuperficie = m.origen_arcilla === 'Superficie';
+    const tipoLabel = esSuperficie ? 'Superficie' : 'Núcleo';
+    const tipoClass = esSuperficie ? 'superficie' : 'nucleo';
     const profInfo = m.arcilla_desde != null
-        ? `<div style="margin-bottom:6px;background:#fef5f0;border-radius:5px;padding:6px 8px;font-size:10px;color:#9B2247;border-left:3px solid #9B2247">
-            <strong>Profundidad:</strong> ${m.arcilla_desde} – ${m.arcilla_hasta} m<br>
-            ${m.arcilla_estructuras ? '<strong>Estructuras:</strong> ' + m.arcilla_estructuras : ''}
-           </div>` : '';
+        ? `<div class="siil-popup-note siil-popup-note--muestra"><strong>Profundidad:</strong> ${m.arcilla_desde} – ${m.arcilla_hasta} m${m.arcilla_estructuras ? '<br><strong>Estructuras:</strong> ' + m.arcilla_estructuras : ''}</div>`
+        : '';
     return `
-    <div style="font-family:'Noto Sans',sans-serif;width:270px;overflow:hidden;">
-        <div style="background:${tipoColor};padding:10px 12px;">
-            <div style="color:#fff;font-size:11px;font-weight:700">${m.id_muestra}</div>
-            <div style="color:rgba(255,255,255,.75);font-size:10px;margin-top:2px">${m.municipio}, ${m.estado}</div>
+    <div class="siil-popup-card siil-popup-card--muestra">
+        <div class="siil-popup-head siil-popup-head--${tipoClass}">
+            <div class="siil-popup-kicker">Muestra de arcilla</div>
+            <div class="siil-popup-title">${m.id_muestra}</div>
+            <div class="siil-popup-sub">${m.municipio}, ${m.estado}</div>
         </div>
-        <div style="padding:10px 12px;">
-            <div style="margin-bottom:7px">
-                <span style="background:${tipoColor}20;color:${tipoColor};font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px">${tipoLabel}</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;">
+        <div class="siil-popup-body">
+            <span class="siil-pill siil-pill--${tipoClass}">${tipoLabel}</span>
+            <div class="siil-popup-grid">
                 ${popField('Litología', m.litologia)}
                 ${popField('Color', m.color)}
                 ${popField('Textura', m.textura)}
                 ${popField('Responsable', m.responsable.split(' ').slice(-1)[0])}
             </div>
             ${profInfo}
-            <div style="font-size:9px;color:#6B7280;margin-bottom:8px;line-height:1.4">${m.notas}</div>
-            ${m.referencia_barreno_id ? `<div style="text-align:center">
-                <button onclick="openExpediente('${m.referencia_barreno_id}','barreno')" style="
-                    background:#9B2247;color:#fff;border:none;
-                    padding:6px 14px;border-radius:6px;
-                    font-size:10px;font-weight:600;cursor:pointer;
-                    font-family:'Noto Sans',sans-serif;">
-                    <i class='bi bi-folder2-open'></i> Ver Barreno Asociado
+            <div class="siil-popup-field-value" style="margin-bottom:10px; color: var(--text-muted); font-size: 9px; font-weight: 600; line-height: 1.5;">${m.notas}</div>
+            ${m.referencia_barreno_id ? `<div class="siil-popup-actions">
+                <button onclick="openExpediente('${m.referencia_barreno_id}','barreno')" class="siil-popup-btn">
+                    <i class='bi bi-folder2-open'></i> Ver barreno asociado
                 </button>
             </div>` : ''}
         </div>
@@ -1075,8 +1748,8 @@ function popupMuestra(m) {
 
 function popField(label, value) {
     return `<div>
-        <div style="font-size:8px;color:#6B7280;text-transform:uppercase;letter-spacing:.3px;font-weight:600;margin-bottom:1px">${label}</div>
-        <div style="font-size:10px;font-weight:600;color:#1F2937">${value || '—'}</div>
+        <div class="siil-popup-field-label">${label}</div>
+        <div class="siil-popup-field-value">${value || '—'}</div>
     </div>`;
 }
 
@@ -1135,25 +1808,20 @@ function renderMap() {
 function buildLegend() {
     const legend = L.control({ position: 'bottomleft' });
     legend.onAdd = function() {
-        const div = L.DomUtil.create('div');
-        div.style.cssText = `
-            background:rgba(255,255,255,.97);padding:10px 14px;
-            border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.15);
-            font-family:'Noto Sans',sans-serif;font-size:11px;
-            border:1px solid #E5E7EB;min-width:155px;`;
+        const div = L.DomUtil.create('div', 'siil-map-legend');
         div.innerHTML = `
-            <div style="font-size:10px;font-weight:700;color:#9B2247;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">Leyenda</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-                <div style="width:14px;height:14px;background:#1E5B4F;border-radius:3px;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
+            <div class="siil-map-legend__title">Simbología activa</div>
+            <div class="siil-map-legend__item">
+                <span class="siil-map-legend__swatch siil-map-legend__swatch--barreno"></span>
                 <span>Barrenos</span>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-                <div style="width:14px;height:14px;background:#A57F2C;border-radius:50%;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
-                <span>Arc. Superficie</span>
+            <div class="siil-map-legend__item">
+                <span class="siil-map-legend__swatch siil-map-legend__swatch--superficie"></span>
+                <span>Arcilla de superficie</span>
             </div>
-            <div style="display:flex;align-items:center;gap:6px">
-                <div style="width:14px;height:14px;background:#9B2247;border-radius:3px;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transform:rotate(45deg)"></div>
-                <span>Arc. Núcleo</span>
+            <div class="siil-map-legend__item">
+                <span class="siil-map-legend__swatch siil-map-legend__swatch--nucleo"></span>
+                <span>Arcilla de núcleo</span>
             </div>`;
         return div;
     };
@@ -1608,6 +2276,11 @@ window.addEventListener('resize', () => {
 </script>
 </body>
 </html>
+
+
+
+
+
 
 
 
