@@ -175,6 +175,24 @@ async function sendRecoveryEmail(
   }
 }
 
+async function sendInviteEmail(
+  adminClient: SupabaseClient,
+  email: string,
+  redirectTo: string,
+  metadata: Record<string, unknown>
+) {
+  const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
+    redirectTo,
+    data: metadata
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 async function createAccount(
   adminClient: SupabaseClient,
   publicClient: SupabaseClient,
@@ -195,23 +213,17 @@ async function createAccount(
     return jsonResponse({ error: 'Correo, nombre, rol valido y redirectTo son obligatorios.' }, 400);
   }
 
-  const temporaryPassword = generateTemporaryPassword();
-  const { data: createdUser, error: createError } = await adminClient.auth.admin.createUser({
-    email: correo,
-    password: temporaryPassword,
-    email_confirm: true,
-    user_metadata: {
-      nombre,
-      rol
-    }
+  const invitedUser = await sendInviteEmail(adminClient, correo, redirectTo, {
+    nombre,
+    rol
   });
 
-  if (createError || !createdUser.user) {
-    return jsonResponse({ error: createError?.message || 'No fue posible crear la cuenta en auth.users.' }, 400);
+  if (!invitedUser?.user) {
+    return jsonResponse({ error: 'No fue posible crear la invitacion en auth.users.' }, 400);
   }
 
   const profilePayload = {
-    id: createdUser.user.id,
+    id: invitedUser.user.id,
     correo,
     nombre,
     rol,
@@ -227,20 +239,18 @@ async function createAccount(
     .single();
 
   if (profileError) {
-    await adminClient.auth.admin.deleteUser(createdUser.user.id);
+    await adminClient.auth.admin.deleteUser(invitedUser.user.id);
     return jsonResponse({ error: profileError.message || 'No fue posible crear el perfil del usuario.' }, 400);
   }
 
   let status: 'success' | 'warning' = 'success';
-  let message = 'Cuenta creada y correo de acceso enviado.';
+  let message = activo
+    ? 'Cuenta creada e invitacion enviada para definir contraseña.'
+    : 'Cuenta creada en estado inactivo. No se envio invitacion inicial.';
   let errorMessage = '';
 
-  try {
-    await sendRecoveryEmail(publicClient, correo, redirectTo);
-  } catch (error) {
+  if (!activo) {
     status = 'warning';
-    message = 'Cuenta creada, pero no fue posible enviar el correo de acceso.';
-    errorMessage = error instanceof Error ? error.message : 'No fue posible enviar el correo de acceso.';
   }
 
   await insertAuditLog(adminClient, callerUser, callerProfile, {
@@ -252,7 +262,7 @@ async function createAccount(
     status,
     viewName,
     metadata: {
-      recovery_email_sent: status === 'success'
+      access_email_sent: activo
     }
   });
 
@@ -511,3 +521,7 @@ Deno.serve(async (request) => {
     return jsonResponse({ error: message }, 500);
   }
 });
+
+
+
+

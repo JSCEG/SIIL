@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperación de contraseña SIIL</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f1ec;font-family:Segoe UI,Arial,sans-serif;color:#1f2937;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f1ec;margin:0;padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background-color:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#ffffff 0%,#f8f5ef 100%);padding:24px 28px 16px 28px;border-bottom:4px solid #8f2347;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="left" style="padding-bottom:12px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding-right:12px;vertical-align:middle;">
+                          <img src="https://vawwzxkvirrjgmhsaetp.supabase.co/storage/v1/object/public/institucional/logo_gob.png" alt="Gobierno de México" width="120" style="display:block;border:0;height:auto;max-width:120px;">
+                        </td>
+                        <td style="padding-right:12px;vertical-align:middle;">
+                          <img src="https://vawwzxkvirrjgmhsaetp.supabase.co/storage/v1/object/public/institucional/logo_sener.png" alt="Secretaría de Energía" width="112" style="display:block;border:0;height:auto;max-width:112px;">
+                        </td>
+                        <td style="vertical-align:middle;">
+                          <img src="https://vawwzxkvirrjgmhsaetp.supabase.co/storage/v1/object/public/institucional/litio.png" alt="LitioMx" width="92" style="display:block;border:0;height:auto;max-width:92px;">
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="font-size:12px;line-height:18px;letter-spacing:0.14em;text-transform:uppercase;color:#8f2347;font-weight:700;">
+                    Sistema Integral de Información de Litio
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:8px;font-size:28px;line-height:34px;color:#12233d;font-weight:700;">
+                    Recuperación de contraseña
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:10px;font-size:15px;line-height:24px;color:#475569;">
+                    Se recibió una solicitud para restablecer la contraseña de la cuenta <strong style="color:#12233d;">{{ .Email }}</strong> en la plataforma SIIL.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding-bottom:20px;font-size:15px;line-height:24px;color:#334155;">
+                    Para definir una nueva contraseña, use el siguiente botón. Si usted no solicitó este cambio, ignore este mensaje sin realizar ninguna acción.
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:8px 0 20px 0;">
+                    <a href="{{ .ConfirmationURL }}" style="display:inline-block;background-color:#8f2347;color:#ffffff;text-decoration:none;font-size:16px;font-weight:700;line-height:16px;padding:16px 28px;border-radius:12px;">Restablecer contraseña</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:14px;font-size:13px;line-height:21px;color:#64748b;">
+                    Si el botón no funciona, copie y pegue este enlace en su navegador:
+                  </td>
+                </tr>
+                <tr>
+                  <td style="word-break:break-all;font-size:13px;line-height:21px;color:#8f2347;">
+                    <a href="{{ .ConfirmationURL }}" style="color:#8f2347;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 28px 28px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;">
+                <tr>
+                  <td style="padding:18px 20px 8px 20px;font-size:13px;line-height:20px;color:#334155;font-weight:700;">
+                    Recomendaciones de seguridad
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 20px 18px 20px;font-size:13px;line-height:21px;color:#64748b;">
+                    No comparta este enlace con terceros. El vínculo puede expirar y está asociado al proceso de recuperación de su cuenta institucional.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 28px 28px 28px;background-color:#12233d;">
+              <div style="font-size:12px;line-height:19px;color:#cbd5e1;">
+                Secretaría de Energía · Litio para México<br>
+                Plataforma SIIL · Mensaje automático de autenticación
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

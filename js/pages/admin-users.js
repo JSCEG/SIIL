@@ -81,7 +81,7 @@
             };
         }
 
-        getRecoveryRedirectUrl() {
+        getAccessRedirectUrl() {
             const config = window.AuthService.getConfig();
             return config.recoveryRedirectUrl || new URL('reset-password.html', window.location.href).toString();
         }
@@ -210,7 +210,7 @@
                         <td class="table-actions">
                             <button type="button" class="table-btn" data-action="edit" data-id="${user.id}">Editar</button>
                             <button type="button" class="table-btn alt" data-action="toggle" data-id="${user.id}">${user.activo !== false ? 'Desactivar' : 'Activar'}</button>
-                            <button type="button" class="table-btn alt" data-action="reset" data-id="${user.id}">Recuperacion</button>
+                            <button type="button" class="table-btn alt" data-action="reset" data-id="${user.id}">Enviar acceso</button>
                         </td>
                     </tr>
                 `;
@@ -225,7 +225,7 @@
             });
 
             tableBody.querySelectorAll('[data-action="reset"]').forEach((button) => {
-                button.addEventListener('click', () => this.sendRecovery(button.dataset.id));
+                button.addEventListener('click', () => this.sendAccessLink(button.dataset.id));
             });
         }
 
@@ -294,7 +294,7 @@
             this.elements.form.reset();
             this.elements.fields.id.value = '';
             this.elements.formTitle.textContent = 'Alta de cuenta';
-            this.elements.submitButton.textContent = 'Crear cuenta';
+            this.elements.submitButton.textContent = 'Crear e invitar';
             this.elements.cancelButton.hidden = true;
             this.elements.fields.activo.checked = true;
         }
@@ -320,12 +320,25 @@
             const isEditing = Boolean(this.state.editingUserId);
 
             if (!payload.correo || !payload.nombre || !payload.rol) {
-                this.setMessage('Correo, nombre y rol son obligatorios.', 'error');
+                await this.showActionAlert('Validación requerida', 'Correo, nombre y rol son obligatorios.', 'warning');
                 return;
             }
 
             if (isEditing && !payload.id) {
-                this.setMessage('El ID del usuario a editar es obligatorio.', 'error');
+                await this.showActionAlert('Validación requerida', 'El ID del usuario a editar es obligatorio.', 'warning');
+                return;
+            }
+
+            const shouldContinue = await this.confirmAction(
+                isEditing ? 'Confirmar actualización' : 'Confirmar alta e invitación',
+                isEditing
+                    ? `Se actualizará la cuenta ${payload.correo}.`
+                    : `Se creará la cuenta ${payload.correo} y se enviará un enlace para definir contraseña.`,
+                'warning',
+                isEditing ? 'Guardar cambios' : 'Crear e invitar'
+            );
+
+            if (!shouldContinue) {
                 return;
             }
 
@@ -333,18 +346,19 @@
                 const response = await this.callAdminFunction({
                     action: isEditing ? 'update' : 'create',
                     ...payload,
-                    redirectTo: this.getRecoveryRedirectUrl(),
+                    redirectTo: this.getAccessRedirectUrl(),
                     viewName: 'dashboard.html'
                 });
 
-                this.setMessage(
-                    response.message || (isEditing ? 'Cuenta actualizada.' : 'Cuenta creada.'),
-                    response.warning ? 'info' : 'success'
-                );
                 this.resetForm();
                 await this.loadData();
+                await this.showActionAlert(
+                    isEditing ? 'Cuenta actualizada' : 'Cuenta creada',
+                    response.message || (isEditing ? 'La cuenta se actualizó correctamente.' : 'La cuenta se creó y se envió la invitación de acceso.'),
+                    response.warning ? 'warning' : 'success'
+                );
             } catch (error) {
-                this.setMessage(error.message || 'No fue posible guardar la cuenta.', 'error');
+                await this.showActionAlert('No fue posible guardar la cuenta', error.message || 'No fue posible guardar la cuenta.', 'danger');
             }
         }
 
@@ -354,40 +368,100 @@
                 return;
             }
 
+            const nextActiveState = !(user.activo !== false);
+            const shouldContinue = await this.confirmAction(
+                nextActiveState ? 'Confirmar activación' : 'Confirmar desactivación',
+                nextActiveState
+                    ? `Se activará la cuenta ${user.correo}. Si corresponde, podrá reenviarse el acceso.`
+                    : `Se desactivará la cuenta ${user.correo} y dejará de poder ingresar a SIIL.`,
+                nextActiveState ? 'warning' : 'danger',
+                nextActiveState ? 'Activar cuenta' : 'Desactivar cuenta'
+            );
+
+            if (!shouldContinue) {
+                return;
+            }
+
             try {
-                const nextActiveState = !(user.activo !== false);
                 const response = await this.callAdminFunction({
                     action: 'toggle',
                     id: userId,
                     activo: nextActiveState,
-                    redirectTo: nextActiveState ? this.getRecoveryRedirectUrl() : '',
+                    redirectTo: nextActiveState ? this.getAccessRedirectUrl() : '',
                     viewName: 'dashboard.html'
                 });
 
-                this.setMessage(response.message || 'Estado de cuenta actualizado.', response.warning ? 'info' : 'success');
                 await this.loadData();
+                await this.showActionAlert(
+                    nextActiveState ? 'Cuenta activada' : 'Cuenta desactivada',
+                    response.message || 'Estado de cuenta actualizado.',
+                    response.warning ? 'warning' : 'success'
+                );
             } catch (error) {
-                this.setMessage(error.message || 'No fue posible actualizar el estado de la cuenta.', 'error');
+                await this.showActionAlert('No fue posible actualizar la cuenta', error.message || 'No fue posible actualizar el estado de la cuenta.', 'danger');
             }
         }
 
-        async sendRecovery(userId) {
+        async sendAccessLink(userId) {
+            const user = this.state.users.find((item) => item.id === userId);
+            if (!user) {
+                return;
+            }
+
+            const shouldContinue = await this.confirmAction(
+                'Enviar enlace de acceso',
+                `Se enviará un correo a ${user.correo} para definir o restablecer su contraseña de acceso a SIIL.`,
+                'warning',
+                'Enviar enlace'
+            );
+
+            if (!shouldContinue) {
+                return;
+            }
+
             try {
                 const response = await this.callAdminFunction({
                     action: 'reset_password',
                     id: userId,
-                    redirectTo: this.getRecoveryRedirectUrl(),
+                    redirectTo: this.getAccessRedirectUrl(),
                     viewName: 'dashboard.html'
                 });
 
-                this.setMessage(response.message || 'Correo de recuperacion generado.', 'success');
+                await this.showActionAlert('Enlace enviado', response.message || 'Enlace de acceso enviado.', 'success');
             } catch (error) {
-                this.setMessage(error.message || 'No fue posible generar el correo de recuperacion.', 'error');
+                await this.showActionAlert('No fue posible generar el enlace', error.message || 'No fue posible generar el enlace de acceso.', 'danger');
             }
         }
 
         getFeatureLabel(featureKey) {
             return FEATURE_LABELS[featureKey] || featureKey;
+        }
+
+        async showActionAlert(title, message, type = 'info') {
+            if (window.Modal?.alert) {
+                await window.Modal.alert({
+                    title,
+                    message,
+                    type,
+                    buttonText: 'Entendido'
+                });
+                return;
+            }
+            this.setMessage(message, type);
+        }
+
+        async confirmAction(title, message, type = 'warning', confirmText = 'Confirmar') {
+            if (window.Modal?.confirm) {
+                return window.Modal.confirm({
+                    title,
+                    message,
+                    type,
+                    confirmText,
+                    cancelText: 'Cancelar',
+                    danger: type === 'danger'
+                });
+            }
+            return window.confirm(message);
         }
 
         setMessage(message, type) {
@@ -410,3 +484,7 @@
         page.init();
     });
 }());
+
+
+
+

@@ -5,13 +5,45 @@ class ResetPasswordManager {
         this.passwordInput = document.getElementById('newPassword');
         this.confirmInput = document.getElementById('confirmPassword');
         this.submitButton = this.form?.querySelector('button[type="submit"]') || null;
+        this.titleElement = document.getElementById('resetViewTitle');
+        this.copyElement = document.getElementById('resetViewCopy');
+        this.asideTitleElement = document.getElementById('resetAsideTitle');
+        this.asideCopyElement = document.getElementById('resetAsideCopy');
+        this.flowType = 'recovery';
         this.recoverySession = null;
         this.init();
     }
 
     async init() {
+        this.applyFlowCopy();
         this.bindEvents();
         await this.bootstrapRecovery();
+    }
+
+    getFlowType() {
+        const hashParams = new URLSearchParams(window.location.hash ? window.location.hash.slice(1) : '');
+        const searchParams = new URLSearchParams(window.location.search);
+        const sessionType = this.recoverySession?.type || '';
+        return sessionType || hashParams.get('type') || searchParams.get('type') || 'recovery';
+    }
+
+    applyFlowCopy() {
+        this.flowType = this.getFlowType() === 'invite' ? 'invite' : 'recovery';
+
+        if (this.flowType === 'invite') {
+            if (this.titleElement) this.titleElement.textContent = 'Activar cuenta SIIL';
+            if (this.copyElement) this.copyElement.textContent = 'Defina su contraseña inicial para activar el acceso a la plataforma SIIL a partir del enlace de invitación enviado a su correo.';
+            if (this.asideTitleElement) this.asideTitleElement.textContent = 'Activación inicial por correo institucional';
+            if (this.asideCopyElement) this.asideCopyElement.textContent = 'Este flujo usa el enlace firmado de Supabase para que cada usuario defina su contraseña inicial sin compartir credenciales temporales.';
+            if (this.submitButton) this.submitButton.textContent = 'Activar cuenta';
+            return;
+        }
+
+        if (this.titleElement) this.titleElement.textContent = 'Restablecer contraseña';
+        if (this.copyElement) this.copyElement.textContent = 'Use esta pantalla para restablecer la contraseña de su cuenta SIIL a partir del enlace enviado por correo.';
+        if (this.asideTitleElement) this.asideTitleElement.textContent = 'Recuperación controlada por correo institucional';
+        if (this.asideCopyElement) this.asideCopyElement.textContent = 'Este flujo usa el enlace firmado de Supabase y permite recuperar el acceso a SIIL sin compartir contraseñas por otros medios.';
+        if (this.submitButton) this.submitButton.textContent = 'Guardar nueva contraseña';
     }
 
     bindEvents() {
@@ -21,7 +53,7 @@ class ResetPasswordManager {
     }
 
     async bootstrapRecovery() {
-        this.setLoading(true, 'Validando enlace', 'Comprobando token de recuperacion');
+        this.setLoading(true, 'Validando enlace', 'Comprobando acceso seguro');
         this.hideStatus();
 
         try {
@@ -29,19 +61,21 @@ class ResetPasswordManager {
                 window.AuthService.establishRecoverySessionFromUrl(),
                 new Promise((_, reject) => {
                     window.setTimeout(() => {
-                        reject(new Error('La validacion del enlace tardo demasiado. Recargue la pagina o solicite un nuevo correo de recuperacion.'));
+                        reject(new Error('La validación del enlace tardó demasiado. Recargue la página o solicite un nuevo enlace.')); 
                     }, 10000);
                 })
             ]);
 
             if (!this.recoverySession?.access_token) {
-                throw new Error('El enlace de recuperacion no es valido o ya expiro. Solicite uno nuevo desde el login.');
+                throw new Error('El enlace de acceso no es válido o ya expiró. Solicite uno nuevo desde la plataforma.');
             }
 
-            this.setStatus('Enlace valido. Ya puede definir una nueva contrasena.', 'success');
+            this.applyFlowCopy();
+            this.setStatus(this.flowType === 'invite' ? 'Invitación válida. Ya puede definir su contraseña inicial.' : 'Enlace válido. Ya puede definir una nueva contraseña.', 'success');
         } catch (error) {
             console.error('Recovery bootstrap error:', error);
-            this.setStatus(error.message || 'No fue posible validar el enlace de recuperacion.', 'error');
+            this.applyFlowCopy();
+            this.setStatus(error.message || 'No fue posible validar el enlace de acceso.', 'error');
             if (this.submitButton) {
                 this.submitButton.disabled = true;
             }
@@ -55,7 +89,7 @@ class ResetPasswordManager {
         this.hideStatus();
 
         if (!this.recoverySession?.access_token) {
-            this.setStatus('No hay una sesion de recuperacion valida. Solicite un nuevo enlace.', 'error');
+            this.setStatus('No hay una sesion valida para continuar. Solicite un nuevo enlace.', 'error');
             return;
         }
 
@@ -67,7 +101,7 @@ class ResetPasswordManager {
             return;
         }
 
-        this.setLoading(true, 'Actualizando contrasena', 'Guardando nueva credencial');
+        this.setLoading(true, this.flowType === 'invite' ? 'Activando cuenta' : 'Actualizando contrasena', 'Guardando nueva credencial');
 
         try {
             await window.AuthService.updatePassword(password, this.recoverySession.access_token);
@@ -76,8 +110,10 @@ class ResetPasswordManager {
 
             if (window.Modal) {
                 await window.Modal.alert({
-                    title: 'Contrasena actualizada',
-                    message: 'La contrasena se actualizo correctamente. Inicie sesion nuevamente con la nueva credencial.',
+                    title: this.flowType === 'invite' ? 'Cuenta activada' : 'Contraseña actualizada',
+                    message: this.flowType === 'invite'
+                        ? 'La cuenta quedó activada correctamente. Inicie sesión con su nueva contraseña.'
+                        : 'La contraseña se actualizó correctamente. Inicie sesión nuevamente con la nueva credencial.',
                     type: 'success',
                     buttonText: 'Ir al login'
                 });
@@ -87,7 +123,7 @@ class ResetPasswordManager {
             return;
         } catch (error) {
             console.error('Update password error:', error);
-            this.setStatus(error.message || 'No fue posible actualizar la contrasena.', 'error');
+            this.setStatus(error.message || 'No fue posible guardar la contrasena.', 'error');
         } finally {
             this.setLoading(false);
         }
@@ -167,3 +203,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.resetPasswordManager = new ResetPasswordManager();
     }
 });
+
+
+
+
+
+
+
