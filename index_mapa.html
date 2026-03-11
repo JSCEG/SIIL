@@ -1,453 +1,1606 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="utf-8" />
-    <title>Mapa de Yacimientos - SIIL | SENER</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mapa de Arcillas - SIIL | SENER</title>
+
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Merriweather:wght@700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/base-theme.css" />
     <link rel="stylesheet" href="css/shared-header.css" />
     <link rel="stylesheet" href="css/shared-breadcrumbs.css" />
     <link rel="stylesheet" href="css/shared-bottom-nav.css" />
-    
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script id="tailwind-config">
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#9B2247",
-                        accent: "#A57F2C",
-                        "background-light": "#F8F9FA"
-                    },
-                    fontFamily: {
-                        display: ["Noto Sans", "sans-serif"]
-                    }
-                }
-            }
-        };
-    </script>
 
     <style>
-        body {
-            font-family: "Noto Sans", sans-serif;
-            min-height: 100vh;
-            background-color: #F8F9FA;
-            padding-bottom: 6rem;
+        /* ─── Variables institucionales SENER/SIIL ─── */
+        :root {
+            --guinda:       #9B2247;
+            --guinda-dark:  #7a1b38;
+            --guinda-light: #f5e6eb;
+            --verde:        #1E5B4F;
+            --verde-dark:   #163d34;
+            --verde-light:  #e6f0ee;
+            --dorado:       #A57F2C;
+            --dorado-light: #f5f0e4;
+            --gris:         #98989A;
+            --gris-claro:   #E5E5E5;
+            --bg:           #F3F4F6;
+            --text:         #1F2937;
+            --text-muted:   #6B7280;
+            --border:       #E5E7EB;
+            --white:        #ffffff;
+            --shadow-sm:    0 1px 3px rgba(0,0,0,.08);
+            --shadow-md:    0 4px 12px rgba(0,0,0,.12);
+            --shadow-lg:    0 8px 24px rgba(0,0,0,.15);
+
+            /* colores para tipos de muestra */
+            --c-barreno:    #1E5B4F;   /* verde — barreno */
+            --c-superficie: #A57F2C;   /* dorado — arcilla superficie */
+            --c-nucleo:     #9B2247;   /* guinda — arcilla núcleo */
         }
 
-        .map-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { min-height: 100%; font-family: 'Noto Sans', sans-serif; color: var(--text); background: var(--bg); }
+        body { padding-bottom: 6rem; }
+        .map-page-shell { max-width: 1500px; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+        .page-intro { margin-bottom: 1rem; background: linear-gradient(135deg, rgba(30,91,79,.96), rgba(155,34,71,.94)); color: #fff; border-radius: 1.5rem; padding: 1.4rem 1.5rem; box-shadow: 0 18px 44px rgba(15,23,42,.14); }
+        .page-intro h1 { font-family: 'Merriweather', serif; font-size: clamp(1.9rem, 3vw, 2.8rem); margin-bottom: .55rem; }
+        .page-intro p { max-width: 68ch; line-height: 1.65; color: rgba(255,255,255,.88); }
+        .main-layout { border-radius: 1.5rem; overflow: hidden; border: 1px solid rgba(229,231,235,.9); box-shadow: 0 18px 45px rgba(15,23,42,.08); height: auto; min-height: 780px; background: #fff; }
+        @media (max-width: 900px) { .map-page-shell { padding-inline: .75rem; } .page-intro { border-radius: 1.2rem; } .main-layout { min-height: 640px; } }
 
-        .page-header {
-            margin-bottom: 2rem;
-        }
-
-        .page-title {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #1F2937;
-            margin-bottom: 0.5rem;
-        }
-
-        .page-subtitle {
-            color: #6B7280;
-            font-size: 1rem;
-        }
-
-        .map-controls {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
-        }
-
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            align-items: end;
-        }
-
-        .control-group {
+        /* ─── Header institucional ─── */
+        .siil-header {
+            height: 52px;
+            background: var(--guinda);
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .control-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .control-input {
-            padding: 0.75rem 1rem;
-            border: 2px solid #E5E7EB;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            transition: border-color 0.2s;
-            font-family: "Noto Sans", sans-serif;
-        }
-
-        .control-input:focus {
-            outline: none;
-            border-color: #9B2247;
-        }
-
-        .btn-primary {
-            background: #9B2247;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            padding: 0 1rem;
+            gap: 1rem;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-md);
+            z-index: 500;
+            position: relative;
+        }
+        .siil-header .logo-band {
+            display: flex; align-items: center; gap: 8px;
+            padding-right: 1rem;
+            border-right: 1px solid rgba(255,255,255,.3);
+        }
+        .siil-header img { height: 28px; filter: brightness(0) invert(1); }
+        .siil-header .title-band {
+            display: flex; flex-direction: column; line-height: 1.1;
+        }
+        .siil-header .title-band .sup { color: rgba(255,255,255,.75); font-size: 9px; text-transform: uppercase; letter-spacing: .8px; }
+        .siil-header .title-band .main { color: #fff; font-size: 13px; font-weight: 700; }
+        .siil-header .badge-demo {
+            margin-left: auto;
+            background: var(--dorado);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
         }
 
-        .btn-primary:hover {
-            background: #7f1c3a;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(155, 34, 71, 0.3);
-        }
-
-        .map-card {
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        /* ─── Layout principal ─── */
+        .main-layout {
+            display: flex;
+            min-height: 780px;
             overflow: hidden;
         }
 
-        .map-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid #E5E7EB;
+        /* ─── Panel izquierdo — dashboard ─── */
+        .side-panel {
+            width: 340px;
+            min-width: 340px;
+            background: var(--white);
+            border-right: 1px solid var(--border);
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
         }
 
-        .map-title {
-            font-size: 1.125rem;
+        .side-panel-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+        }
+        .side-panel-scroll::-webkit-scrollbar { width: 4px; }
+        .side-panel-scroll::-webkit-scrollbar-track { background: transparent; }
+        .side-panel-scroll::-webkit-scrollbar-thumb { background: var(--gris-claro); border-radius: 4px; }
+
+        /* filtros */
+        .filter-section {
+            margin-bottom: 14px;
+        }
+        .filter-section h4 {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            color: var(--text-muted);
+            font-family: 'Noto Sans', sans-serif;
             font-weight: 700;
-            color: #1F2937;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            margin-bottom: 8px;
         }
-
-        .map-actions {
-            display: flex;
-            gap: 0.5rem;
+        .filter-row {
+            display: flex; gap: 6px; margin-bottom: 6px;
         }
-
-        .btn-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 0.5rem;
-            border: 2px solid #E5E7EB;
-            background: white;
-            color: #6B7280;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .filter-row select, .filter-row input {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: 'Noto Sans', sans-serif;
+            color: var(--text);
+            background: var(--white);
+            outline: none;
+            transition: border-color .15s;
+        }
+        .filter-row select:focus, .filter-row input:focus {
+            border-color: var(--guinda);
+        }
+        .btn-filter {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'Noto Sans', sans-serif;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all .15s;
+        }
+        .btn-filter.primary {
+            background: var(--guinda);
+            color: #fff;
+        }
+        .btn-filter.primary:hover { background: var(--guinda-dark); }
+        .btn-filter.secondary {
+            background: var(--bg);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .btn-filter.secondary:hover { background: var(--gris-claro); }
+
+        /* toggle layer chips */
+        .layer-chips {
+            display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px;
+        }
+        .chip {
+            display: flex; align-items: center; gap: 4px;
+            padding: 4px 9px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all .15s;
+            user-select: none;
+        }
+        .chip.active-barreno   { background: var(--verde-light); border-color: var(--verde);     color: var(--verde); }
+        .chip.active-superficie{ background: var(--dorado-light); border-color: var(--dorado);   color: var(--dorado); }
+        .chip.active-nucleo    { background: var(--guinda-light); border-color: var(--guinda);   color: var(--guinda); }
+        .chip.inactive { background: var(--bg); border-color: var(--gris-claro); color: var(--gris); }
+        .chip-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            display: inline-block; flex-shrink: 0;
         }
 
-        .btn-icon:hover {
-            border-color: #9B2247;
-            color: #9B2247;
-            background: #FEF2F2;
+        /* separador */
+        .divider {
+            height: 1px; background: var(--border); margin: 12px 0;
         }
 
-        .map-view {
-            height: 600px;
-            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
-            position: relative;
-        }
-
-        .map-placeholder {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: #9CA3AF;
-        }
-
-        .map-placeholder i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        .legend-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-top: 1.5rem;
-        }
-
-        .legend-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1F2937;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .legend-grid {
+        /* KPI cards */
+        .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .kpi-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            border-left: 3px solid;
+            transition: box-shadow .15s;
+        }
+        .kpi-card:hover { box-shadow: var(--shadow-sm); }
+        .kpi-card.c-barreno    { border-left-color: var(--verde); }
+        .kpi-card.c-superficie { border-left-color: var(--dorado); }
+        .kpi-card.c-nucleo     { border-left-color: var(--guinda); }
+        .kpi-card.c-total      { border-left-color: var(--gris); }
+        .kpi-label {
+            font-size: 9px; text-transform: uppercase; letter-spacing: .5px;
+            color: var(--text-muted); font-weight: 600; margin-bottom: 4px;
+        }
+        .kpi-value {
+            font-size: 22px; font-weight: 800; line-height: 1;
+            color: var(--text);
+        }
+        .kpi-desc { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+
+        /* sección de gráfica */
+        .chart-section { margin-bottom: 14px; }
+        .chart-title {
+            font-size: 10px; text-transform: uppercase; letter-spacing: .7px;
+            color: var(--text-muted); font-weight: 700; margin-bottom: 8px;
+        }
+        .chart-box {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        canvas { max-height: 160px; }
+
+        /* lista de barrenos */
+        .barreno-list-title {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px;
+        }
+        .barreno-list-title h4 {
+            font-size: 10px; text-transform: uppercase; letter-spacing: .7px;
+            color: var(--text-muted); font-weight: 700;
+        }
+        .count-badge {
+            background: var(--guinda); color: #fff;
+            font-size: 9px; font-weight: 700;
+            padding: 1px 6px; border-radius: 20px;
+        }
+        .barreno-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all .15s;
+            background: var(--white);
+        }
+        .barreno-item:hover { background: var(--guinda-light); border-color: var(--guinda); }
+        .barreno-icon {
+            width: 28px; height: 28px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 800; flex-shrink: 0;
+            color: #fff;
+            background: var(--verde);
+        }
+        .barreno-info { flex: 1; min-width: 0; }
+        .barreno-id { font-size: 10px; font-weight: 700; color: var(--text); }
+        .barreno-sub { font-size: 9px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .barreno-muestras-count {
+            font-size: 9px; font-weight: 700; color: var(--guinda);
+            background: var(--guinda-light); padding: 2px 6px; border-radius: 10px;
         }
 
-        .legend-item {
+        /* ─── Área del mapa ─── */
+        .map-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ─── Expediente Slide Panel ─── */
+        .expediente-panel {
+            position: fixed;
+            top: 112px;
+            right: -460px;
+            width: 440px;
+            height: calc(100vh - 112px);
+            background: var(--white);
+            border-left: 1px solid var(--border);
+            box-shadow: -4px 0 20px rgba(0,0,0,.12);
+            z-index: 1000;
             display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            flex-direction: column;
+            transition: right .3s cubic-bezier(.4,0,.2,1);
+            overflow: hidden;
         }
+        .expediente-panel.open { right: 0; }
 
-        .legend-marker {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
+        .exp-header {
+            background: var(--verde);
+            padding: 14px 16px;
+            display: flex; align-items: flex-start; gap: 10px;
             flex-shrink: 0;
         }
-
-        .legend-label {
-            font-size: 0.875rem;
-            color: #374151;
+        .exp-header-icon {
+            width: 36px; height: 36px; border-radius: 8px;
+            background: rgba(255,255,255,.15);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: #fff; flex-shrink: 0;
         }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
+        .exp-header-info { flex: 1; min-width: 0; }
+        .exp-header-title { color: #fff; font-size: 13px; font-weight: 700; }
+        .exp-header-sub { color: rgba(255,255,255,.75); font-size: 10px; margin-top: 2px; }
+        .exp-close {
+            background: rgba(255,255,255,.15); border: none; color: #fff;
+            width: 28px; height: 28px; border-radius: 6px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+            transition: background .15s;
         }
+        .exp-close:hover { background: rgba(255,255,255,.3); }
 
-        .info-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .info-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #9B2247 0%, #7f1c3a 100%);
-            border-radius: 0.75rem;
+        .exp-tabs {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            flex-shrink: 0;
         }
-
-        .info-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1F2937;
-            margin-bottom: 0.5rem;
+        .exp-tab {
+            flex: 1; padding: 8px 4px;
+            font-size: 10px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .5px;
+            color: var(--text-muted);
+            border: none; background: none; cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all .15s;
+            font-family: 'Noto Sans', sans-serif;
         }
+        .exp-tab.active { color: var(--guinda); border-bottom-color: var(--guinda); background: var(--white); }
+        .exp-tab:hover:not(.active) { color: var(--text); background: var(--gris-claro); }
 
-        .info-text {
-            font-size: 0.875rem;
-            color: #6B7280;
-            line-height: 1.6;
+        .exp-body {
+            flex: 1; overflow-y: auto; padding: 14px;
+        }
+        .exp-body::-webkit-scrollbar { width: 4px; }
+        .exp-body::-webkit-scrollbar-thumb { background: var(--gris-claro); border-radius: 4px; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* campos del expediente */
+        .field-group {
+            margin-bottom: 14px;
+        }
+        .field-group-title {
+            font-size: 9px; text-transform: uppercase; letter-spacing: .7px;
+            color: var(--guinda); font-weight: 700;
+            border-bottom: 1px solid var(--guinda-light);
+            padding-bottom: 5px; margin-bottom: 8px;
+        }
+        .field-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+        }
+        .field-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .field-grid.cols-1 { grid-template-columns: 1fr; }
+        .field-item {}
+        .field-label { font-size: 9px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+        .field-value { font-size: 11px; font-weight: 600; color: var(--text); }
+        .field-value.mono { font-family: monospace; font-size: 10px; }
+        .field-value.big { font-size: 14px; font-weight: 800; color: var(--guinda); }
+
+        /* badge de tipo */
+        .type-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 8px; border-radius: 20px;
+            font-size: 10px; font-weight: 700;
+        }
+        .type-badge.sup { background: var(--dorado-light); color: var(--dorado); }
+        .type-badge.nuc { background: var(--guinda-light); color: var(--guinda); }
+        .type-badge.brn { background: var(--verde-light);  color: var(--verde); }
+
+        /* tabla intervalos */
+        .int-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        .int-table th {
+            background: var(--bg); padding: 5px 8px;
+            text-align: left; font-size: 9px; text-transform: uppercase;
+            letter-spacing: .4px; color: var(--text-muted); font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+        .int-table td {
+            padding: 6px 8px; border-bottom: 1px solid var(--border);
+            font-size: 10px;
+        }
+        .int-table tr:last-child td { border-bottom: none; }
+        .int-table tr:hover td { background: var(--bg); }
+
+        /* tarjeta de muestra */
+        .muestra-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: var(--bg);
+        }
+        .muestra-card-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 6px;
+        }
+        .muestra-card-id { font-size: 10px; font-weight: 700; color: var(--text); }
+        .muestra-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .mcg-item { }
+        .mcg-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; font-weight: 600; }
+        .mcg-value { font-size: 10px; font-weight: 600; color: var(--text); }
+
+        /* mapa popup override */
+        .leaflet-popup-content-wrapper {
+            border-radius: 10px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,.15) !important;
+            border: 1px solid var(--border) !important;
+            padding: 0 !important;
+            overflow: hidden;
+        }
+        .leaflet-popup-content {
+            margin: 0 !important;
+            min-width: 260px !important;
+        }
+        .leaflet-popup-tip-container { display: none; }
+
+        /* carga overlay */
+        .map-loading {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,.85);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 999; gap: 12px;
+            transition: opacity .3s;
+        }
+        .map-loading.hidden { opacity: 0; pointer-events: none; }
+        .spinner {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 4px solid var(--gris-claro);
+            border-top-color: var(--guinda);
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .map-loading p { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+        /* notificación */
+        .map-notification {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            background: var(--verde); color: #fff;
+            padding: 7px 16px; border-radius: 20px;
+            font-size: 11px; font-weight: 600;
+            box-shadow: var(--shadow-md);
+            z-index: 600;
+            opacity: 0; transition: opacity .3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .map-notification.show { opacity: 1; }
+
+        /* responsive — ocultar panel lateral en pantallas pequeñas */
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column; }
+            .side-panel { display: flex; width: 100%; min-width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: 55vh; }
+            .map-wrapper { min-height: 60vh; }
+            .expediente-panel { width: 100%; right: -100%; top: 88px; height: calc(100vh - 88px); }
         }
     </style>
 </head>
-
 <body>
-    <site-header></site-header>
-    <site-breadcrumbs></site-breadcrumbs>
 
-    <main class="map-container">
-        <div class="page-header">
-            <h1 class="page-title">Mapa de Yacimientos de Litio</h1>
-            <p class="page-subtitle">Visualización geoespacial de recursos minerales en territorio nacional</p>
-        </div>
+<site-header></site-header>
+<site-breadcrumbs></site-breadcrumbs>
 
-        <!-- Map Controls -->
-        <div class="map-controls">
-            <div class="controls-grid">
-                <div class="control-group">
-                    <label class="control-label">Estado</label>
-                    <select class="control-input">
+<main class="map-page-shell">
+    <section class="page-intro">
+        <h1>Mapa de arcillas y barrenos</h1>
+        <p>Vista adaptada desde el demo a la pagina real de SIIL, conservando filtros, KPIs, capas, listado operativo y expediente lateral dentro del layout compartido del sistema.</p>
+    </section>
+
+    <div class="main-layout">
+
+    <!-- ── PANEL IZQUIERDO — Dashboard ── -->
+    <aside class="side-panel">
+        <div class="side-panel-scroll">
+
+            <!-- Filtros -->
+            <div class="filter-section">
+                <h4><i class="bi bi-funnel-fill"></i> Filtros</h4>
+                <div class="filter-row">
+                    <select id="filter-estado">
                         <option value="">Todos los estados</option>
-                        <option value="sonora">Sonora</option>
-                        <option value="chihuahua">Chihuahua</option>
-                        <option value="zacatecas">Zacatecas</option>
-                        <option value="slp">San Luis Potosí</option>
-                        <option value="durango">Durango</option>
+                        <option value="Sonora">Sonora</option>
+                        <option value="Zacatecas">Zacatecas</option>
+                        <option value="San Luis Potosí">San Luis Potosí</option>
+                        <option value="Jalisco">Jalisco</option>
                     </select>
-                </div>
-
-                <div class="control-group">
-                    <label class="control-label">Tipo de Yacimiento</label>
-                    <select class="control-input">
+                    <select id="filter-fuente">
                         <option value="">Todos los tipos</option>
-                        <option value="salmuera">Salmuera</option>
-                        <option value="roca">Roca dura</option>
-                        <option value="arcilla">Arcilla</option>
+                        <option value="Barreno">Barrenos</option>
+                        <option value="Superficie">Arc. Superficie</option>
+                        <option value="Nucleo">Arc. Núcleo</option>
                     </select>
                 </div>
-
-                <div class="control-group">
-                    <label class="control-label">Concentración Mínima</label>
-                    <input type="number" class="control-input" placeholder="ppm" value="200">
+                <div class="filter-row">
+                    <input type="text" id="filter-search" placeholder="Buscar ID, proyecto, estado…" />
+                    <button class="btn-filter secondary" onclick="resetFilters()"><i class="bi bi-x"></i></button>
+                    <button class="btn-filter primary" onclick="applyFilters()"><i class="bi bi-search"></i></button>
                 </div>
 
-                <div class="control-group">
-                    <label class="control-label">&nbsp;</label>
-                    <button class="btn-primary">
-                        <i class="fa-solid fa-filter"></i>
-                        Aplicar Filtros
-                    </button>
+                <!-- toggle capas -->
+                <div class="layer-chips">
+                    <div class="chip active-barreno" data-layer="barrenos" onclick="toggleChip(this, 'barrenos')">
+                        <span class="chip-dot" style="background:var(--verde)"></span>
+                        Barrenos
+                    </div>
+                    <div class="chip active-superficie" data-layer="superficie" onclick="toggleChip(this, 'superficie')">
+                        <span class="chip-dot" style="background:var(--dorado)"></span>
+                        Arc. Superficie
+                    </div>
+                    <div class="chip active-nucleo" data-layer="nucleo" onclick="toggleChip(this, 'nucleo')">
+                        <span class="chip-dot" style="background:var(--guinda)"></span>
+                        Arc. Núcleo
+                    </div>
                 </div>
             </div>
+
+            <div class="divider"></div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card c-barreno">
+                    <div class="kpi-label"><i class="bi bi-geo-fill"></i> Barrenos</div>
+                    <div class="kpi-value" id="kpi-barrenos">7</div>
+                    <div class="kpi-desc">perforaciones registradas</div>
+                </div>
+                <div class="kpi-card c-total">
+                    <div class="kpi-label"><i class="bi bi-collection-fill"></i> Total Muestras</div>
+                    <div class="kpi-value" id="kpi-total">18</div>
+                    <div class="kpi-desc">arcillas en catálogo</div>
+                </div>
+                <div class="kpi-card c-superficie">
+                    <div class="kpi-label"><i class="bi bi-layers-fill"></i> Superficie</div>
+                    <div class="kpi-value" id="kpi-sup">8</div>
+                    <div class="kpi-desc">muestras superficiales</div>
+                </div>
+                <div class="kpi-card c-nucleo">
+                    <div class="kpi-label"><i class="bi bi-arrow-down-circle-fill"></i> Núcleo</div>
+                    <div class="kpi-value" id="kpi-nuc">10</div>
+                    <div class="kpi-desc">muestras de profundidad</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Gráfica 1: distribución por tipo -->
+            <div class="chart-section">
+                <div class="chart-title"><i class="bi bi-pie-chart-fill"></i> Distribución por tipo</div>
+                <div class="chart-box">
+                    <canvas id="chartTipo"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfica 2: por litología -->
+            <div class="chart-section">
+                <div class="chart-title"><i class="bi bi-bar-chart-fill"></i> Muestras por litología</div>
+                <div class="chart-box">
+                    <canvas id="chartLito"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfica 3: TCR promedio por barreno -->
+            <div class="chart-section">
+                <div class="chart-title"><i class="bi bi-graph-up-arrow"></i> TCR por barreno (recuperación)</div>
+                <div class="chart-box">
+                    <canvas id="chartTCR"></canvas>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Lista rápida de barrenos -->
+            <div>
+                <div class="barreno-list-title">
+                    <h4><i class="bi bi-list-ul"></i> Barrenos registrados</h4>
+                    <span class="count-badge" id="barrenos-count">7</span>
+                </div>
+                <div id="barreno-list"></div>
+            </div>
+
+        </div><!-- /scroll -->
+    </aside>
+
+    <!-- ── MAPA ── -->
+    <div class="map-wrapper">
+        <div id="map"></div>
+
+        <!-- loader -->
+        <div class="map-loading" id="map-loading">
+            <div class="spinner"></div>
+            <p>Cargando datos de campo…</p>
         </div>
 
-        <!-- Map Card -->
-        <div class="map-card">
-            <div class="map-header">
-                <h2 class="map-title">
-                    <i class="fa-solid fa-map-location-dot"></i>
-                    Mapa Interactivo
-                </h2>
-                <div class="map-actions">
-                    <button class="btn-icon" title="Zoom In">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                    <button class="btn-icon" title="Zoom Out">
-                        <i class="fa-solid fa-minus"></i>
-                    </button>
-                    <button class="btn-icon" title="Centrar">
-                        <i class="fa-solid fa-location-crosshairs"></i>
-                    </button>
-                    <button class="btn-icon" title="Pantalla Completa">
-                        <i class="fa-solid fa-expand"></i>
-                    </button>
-                    <button class="btn-icon" title="Descargar">
-                        <i class="fa-solid fa-download"></i>
-                    </button>
-                </div>
+        <!-- notificación flotante -->
+        <div class="map-notification" id="map-notif"></div>
+    </div>
+
+</div><!-- /main-layout -->
+
+<!-- ═══ EXPEDIENTE SLIDE PANEL ═══ -->
+<div class="expediente-panel" id="expediente-panel">
+    <div class="exp-header" id="exp-header">
+        <div class="exp-header-icon" id="exp-icon"><i class="bi bi-geo-alt-fill"></i></div>
+        <div class="exp-header-info">
+            <div class="exp-header-title" id="exp-title">—</div>
+            <div class="exp-header-sub" id="exp-sub">—</div>
+        </div>
+        <button class="exp-close" onclick="closeExpediente()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="exp-tabs">
+        <button class="exp-tab active" onclick="switchTab('datos')">Datos Generales</button>
+        <button class="exp-tab" onclick="switchTab('intervalos')">Intervalos</button>
+        <button class="exp-tab" onclick="switchTab('muestras')">Muestras</button>
+    </div>
+
+    <div class="exp-body">
+        <!-- TAB: Datos generales -->
+        <div class="tab-content active" id="tab-datos"></div>
+
+        <!-- TAB: Intervalos -->
+        <div class="tab-content" id="tab-intervalos"></div>
+
+        <!-- TAB: Muestras asociadas -->
+        <div class="tab-content" id="tab-muestras"></div>
+    </div>
+</div>
+
+
+</main>
+
+<site-bottom-nav></site-bottom-nav>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="js/shared/preloader.js"></script>
+<script src="js/shared/shared-layout.js"></script>
+<script src="js/shared/shared-breadcrumbs.js"></script>
+<script src="js/shared/auth.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   DATOS DEMO — Barrenos y Muestras de Arcillas SIIL
+   (Sonora es la zona principal de arcillas smectíticas
+    asociadas a litio en México)
+══════════════════════════════════════════════════════ */
+const DEMO_BARRENOS = [
+    {
+        id: 'SEFMP31-SON-BRN-001',
+        proyecto: 'Prospección Arcillas Litio Sonora Norte',
+        subregion_sigla: 'SON',
+        perforista: 'Ing. Carlos Reyes',
+        responsable: 'M.C. Elena Vásquez',
+        estado: 'Sonora', municipio: 'Altar',
+        latitud: 30.7194, longitud: -111.8407, altitud: 648,
+        azimut: 0, inclinacion: -90,
+        tipo_barrenacion: 'Rotación con recuperación de núcleo',
+        fecha_inicio: '2025-10-15', fecha_fin: '2025-10-28',
+        longitud_perforada: 80.0, longitud_recuperada: 72.4,
+        diametro_mm: 76, numero_cajas: 8, nombre_cajas: 'SON-001-A',
+        rqd: 'Moderado', tcr: 0.905,
+        litologia_local: 'Toba riolítica alterada, bentonita, paleosuelos',
+        anomalia_gravimetrica: -3.2,
+        accesibilidad: 'Camino de terracería 12 km desde Altar',
+        observaciones: 'Intervalo 30-55 m con marcada alteración argílica. Se observan vetillas de calcita.',
+        intervalos: [
+            { intervalo_id: 'INT-001', orden: 1, desde: 0,    hasta: 20,   litologia: 'Cuaternario / Aluvión', color: 'Café claro', recuperacion: 'Buena' },
+            { intervalo_id: 'INT-002', orden: 2, desde: 20,   hasta: 40,   litologia: 'Toba riolítica', color: 'Gris verdoso', recuperacion: 'Regular' },
+            { intervalo_id: 'INT-003', orden: 3, desde: 40,   hasta: 60,   litologia: 'Bentonita (Montmorillonita)', color: 'Verde grisáceo', recuperacion: 'Excelente' },
+            { intervalo_id: 'INT-004', orden: 4, desde: 60,   hasta: 80,   litologia: 'Riolita fracturada', color: 'Gris rosado', recuperacion: 'Buena' },
+        ]
+    },
+    {
+        id: 'SEFMP31-SON-BRN-002',
+        proyecto: 'Prospección Arcillas Litio Sonora Norte',
+        subregion_sigla: 'SON',
+        perforista: 'Ing. Carlos Reyes',
+        responsable: 'Dra. Laura Ochoa',
+        estado: 'Sonora', municipio: 'Caborca',
+        latitud: 30.7082, longitud: -112.1631, altitud: 312,
+        azimut: 15, inclinacion: -85,
+        tipo_barrenacion: 'Diamantina HQ',
+        fecha_inicio: '2025-11-03', fecha_fin: '2025-11-19',
+        longitud_perforada: 120.0, longitud_recuperada: 108.6,
+        diametro_mm: 63, numero_cajas: 13, nombre_cajas: 'SON-002-A',
+        rqd: 'Bueno', tcr: 0.905,
+        litologia_local: 'Gneis granítico con alteración supérgena, arcillas illíticas en fallas',
+        anomalia_gravimetrica: -1.8,
+        accesibilidad: 'Brecha pavimentada, acceso directo',
+        observaciones: 'Contacto fallado a 65 m con enriquecimiento en Li. Se recomiendan análisis XRF.',
+        intervalos: [
+            { intervalo_id: 'INT-001', orden: 1, desde: 0,   hasta: 30,  litologia: 'Aluvión grueso', color: 'Café anaranjado', recuperacion: 'Buena' },
+            { intervalo_id: 'INT-002', orden: 2, desde: 30,  hasta: 65,  litologia: 'Illita / Kaolinita', color: 'Amarillo pálido', recuperacion: 'Excelente' },
+            { intervalo_id: 'INT-003', orden: 3, desde: 65,  hasta: 100, litologia: 'Gneis granítico alterado', color: 'Gris oscuro', recuperacion: 'Regular' },
+            { intervalo_id: 'INT-004', orden: 4, desde: 100, hasta: 120, litologia: 'Gneis sano', color: 'Gris azulado', recuperacion: 'Buena' },
+        ]
+    },
+    {
+        id: 'SEFMP31-SON-BRN-003',
+        proyecto: 'Arcillas Smectíticas Sonora Sur',
+        subregion_sigla: 'SON',
+        perforista: 'Téc. Juan Morales',
+        responsable: 'M.C. Elena Vásquez',
+        estado: 'Sonora', municipio: 'Ures',
+        latitud: 29.4286, longitud: -110.3977, altitud: 543,
+        azimut: 0, inclinacion: -90,
+        tipo_barrenacion: 'Rotación con recuperación de núcleo',
+        fecha_inicio: '2025-11-20', fecha_fin: '2025-12-05',
+        longitud_perforada: 60.0, longitud_recuperada: 56.4,
+        diametro_mm: 76, numero_cajas: 7, nombre_cajas: 'SON-003-A',
+        rqd: 'Moderado', tcr: 0.940,
+        litologia_local: 'Depósitos lacustres, bentonita potásica, arcillas expansivas',
+        anomalia_gravimetrica: -4.5,
+        accesibilidad: 'Senda 8 km, requiere 4x4',
+        observaciones: 'Elevado contenido de smectitas con alta capacidad de intercambio catiónico (CIC > 90 meq/100g).',
+        intervalos: [
+            { intervalo_id: 'INT-001', orden: 1, desde: 0,  hasta: 15, litologia: 'Suelo orgánico', color: 'Negro', recuperacion: 'Regular' },
+            { intervalo_id: 'INT-002', orden: 2, desde: 15, hasta: 40, litologia: 'Bentonita potásica', color: 'Verde olivo', recuperacion: 'Excelente' },
+            { intervalo_id: 'INT-003', orden: 3, desde: 40, hasta: 60, litologia: 'Andesita alterada', color: 'Gris verdoso', recuperacion: 'Buena' },
+        ]
+    },
+    {
+        id: 'SEFMP31-ZAC-BRN-001',
+        proyecto: 'Inventario Arcillas Zacatecas',
+        subregion_sigla: 'ZAC',
+        perforista: 'Ing. Mario Soto',
+        responsable: 'Dr. Andrés Fuentes',
+        estado: 'Zacatecas', municipio: 'Mazapil',
+        latitud: 24.6319, longitud: -101.5492, altitud: 1820,
+        azimut: 30, inclinacion: -80,
+        tipo_barrenacion: 'Diamantina NQ',
+        fecha_inicio: '2025-09-10', fecha_fin: '2025-09-25',
+        longitud_perforada: 100.0, longitud_recuperada: 85.0,
+        diametro_mm: 50, numero_cajas: 11, nombre_cajas: 'ZAC-001-A',
+        rqd: 'Bajo', tcr: 0.850,
+        litologia_local: 'Calizas con skarn, arcillas calco-silicatadas',
+        anomalia_gravimetrica: 1.2,
+        accesibilidad: 'Carretera federal km 230, acceso directo',
+        observaciones: 'Asociación con mineralización de Fe-Cu. Arcillas cloríticas secundarias en zonas de contacto.',
+        intervalos: [
+            { intervalo_id: 'INT-001', orden: 1, desde: 0,  hasta: 25,  litologia: 'Caliche / Regolito', color: 'Café rojizo', recuperacion: 'Regular' },
+            { intervalo_id: 'INT-002', orden: 2, desde: 25, hasta: 60,  litologia: 'Clorita / Skarn', color: 'Verde intenso', recuperacion: 'Buena' },
+            { intervalo_id: 'INT-003', orden: 3, desde: 60, hasta: 100, litologia: 'Caliza sana', color: 'Gris claro', recuperacion: 'Regular' },
+        ]
+    },
+    {
+        id: 'SEFMP31-SLP-BRN-001',
+        proyecto: 'Arcillas Altiplano Potosino',
+        subregion_sigla: 'SLP',
+        perforista: 'Ing. Patricia Leal',
+        responsable: 'M.C. Felipe Ruiz',
+        estado: 'San Luis Potosí', municipio: 'Charcas',
+        latitud: 23.1319, longitud: -101.1131, altitud: 2100,
+        azimut: 0, inclinacion: -90,
+        tipo_barrenacion: 'Rotación con lavado',
+        fecha_inicio: '2025-08-01', fecha_fin: '2025-08-20',
+        longitud_perforada: 50.0, longitud_recuperada: 42.0,
+        diametro_mm: 76, numero_cajas: 5, nombre_cajas: 'SLP-001-A',
+        rqd: 'Moderado', tcr: 0.840,
+        litologia_local: 'Lutitas arcillosas, montmorillonita, paleosuelos',
+        anomalia_gravimetrica: -2.1,
+        accesibilidad: 'Terracería 20 km desde Charcas, condicionada a época seca',
+        observaciones: 'Material con alta expansividad. CIC aproximado 75 meq/100g. Posible uso industrial.',
+        intervalos: [
+            { intervalo_id: 'INT-001', orden: 1, desde: 0,  hasta: 20, litologia: 'Lutita limosa', color: 'Gris amarillento', recuperacion: 'Buena' },
+            { intervalo_id: 'INT-002', orden: 2, desde: 20, hasta: 40, litologia: 'Montmorillonita', color: 'Blanco verdoso', recuperacion: 'Excelente' },
+            { intervalo_id: 'INT-003', orden: 3, desde: 40, hasta: 50, litologia: 'Andesita / Basalto', color: 'Negro grisáceo', recuperacion: 'Regular' },
+        ]
+    },
+    {
+        id: 'SEFMP31-JAL-BRN-001',
+        proyecto: 'Arcillas Volcánicas Jalisco',
+        subregion_sigla: 'JAL',
+        perforista: 'Ing. Roberto Ávila',
+        responsable: 'Dra. Sofía Mendoza',
+        estado: 'Jalisco', municipio: 'Bolaños',
+        latitud: 21.7419, longitud: -103.7731, altitud: 1480,
+        azimut: 45, inclinacion: -75,
+        tipo_barrenacion: 'Diamantina HQ',
+        fecha_inicio: '2025-07-10', fecha_fin: '2025-07-28',
+        longitud_perforada: 90.0, longitud_recuperada: 81.9,
+        diametro_mm: 63, numero_cajas: 10, nombre_cajas: 'JAL-001-A',
+        rqd: 'Bueno', tcr: 0.910,
+        litologia_local: 'Ignimbrita riolítica, zeolitas, arcillas caoliníticas',
+        anomalia_gravimetrica: -0.8,
+        accesibilidad: 'Carretera estatal, brecha 5 km',
+        observaciones: 'Fuerte alteración hidrotermal. Presencia de caolinita + alunita. Potencial cerámico alto.',
+        intervalos: [
+            { intervalo_id: 'INT-001', orden: 1, desde: 0,  hasta: 30, litologia: 'Ignimbrita alterada', color: 'Rosado blanquecino', recuperacion: 'Buena' },
+            { intervalo_id: 'INT-002', orden: 2, desde: 30, hasta: 65, litologia: 'Caolinita / Alunita', color: 'Blanco amarillento', recuperacion: 'Excelente' },
+            { intervalo_id: 'INT-003', orden: 3, desde: 65, hasta: 90, litologia: 'Ignimbrita sana', color: 'Gris rosado', recuperacion: 'Buena' },
+        ]
+    },
+    {
+        id: 'SEFMP31-SON-BRN-004',
+        proyecto: 'Arcillas Smectíticas Sonora Sur',
+        subregion_sigla: 'SON',
+        perforista: 'Téc. Juan Morales',
+        responsable: 'M.C. Elena Vásquez',
+        estado: 'Sonora', municipio: 'Santa Ana',
+        latitud: 30.5439, longitud: -111.1212, altitud: 730,
+        azimut: 0, inclinacion: -90,
+        tipo_barrenacion: 'Rotación con recuperación de núcleo',
+        fecha_inicio: '2025-12-10', fecha_fin: '2025-12-22',
+        longitud_perforada: 45.0, longitud_recuperada: 40.5,
+        diametro_mm: 76, numero_cajas: 5, nombre_cajas: 'SON-004-A',
+        rqd: 'Bajo', tcr: 0.900,
+        litologia_local: 'Arenisca lacustre, smectitas, arcillas pirofilíticas',
+        anomalia_gravimetrica: -5.1,
+        accesibilidad: 'Senda 15 km, requiere vehículo 4x4',
+        observaciones: 'Zona de interés prioritario. Anomalía gravimétrica intensa. Se requieren estudios geofísicos complementarios.',
+        intervalos: [
+            { intervalo_id: 'INT-001', orden: 1, desde: 0,  hasta: 10, litologia: 'Aluvión fino', color: 'Café claro', recuperacion: 'Regular' },
+            { intervalo_id: 'INT-002', orden: 2, desde: 10, hasta: 35, litologia: 'Smectita / Pirofilita', color: 'Verde pálido', recuperacion: 'Excelente' },
+            { intervalo_id: 'INT-003', orden: 3, desde: 35, hasta: 45, litologia: 'Riolita', color: 'Gris claro', recuperacion: 'Buena' },
+        ]
+    }
+];
+
+const DEMO_MUESTRAS = [
+    // ── Superficie ──
+    { id_muestra: 'SON-ALT-SUP-A.00001', estado: 'Sonora', municipio: 'Altar', latitud: 30.7350, longitud: -111.8600, fuente: 'Arcillas', origen_arcilla: 'Superficie', litologia: 'Bentonita', color: 'Verde grisáceo', textura: 'Pastosa / Plástica', responsable: 'M.C. Elena Vásquez', notas: 'Alta plasticidad, posible montmorillonita cálcica', referencia_barreno_id: null, arcilla_altitud: 620 },
+    { id_muestra: 'SON-ALT-SUP-A.00002', estado: 'Sonora', municipio: 'Altar', latitud: 30.7100, longitud: -111.8200, fuente: 'Arcillas', origen_arcilla: 'Superficie', litologia: 'Illita', color: 'Amarillo pálido', textura: 'Harinosa / Seca', responsable: 'M.C. Elena Vásquez', notas: 'Muestra superficial zona árida. Illita dominante con trazas de cuarzo.', referencia_barreno_id: null, arcilla_altitud: 632 },
+    { id_muestra: 'SON-CAB-SUP-A.00001', estado: 'Sonora', municipio: 'Caborca', latitud: 30.7200, longitud: -112.1900, fuente: 'Arcillas', origen_arcilla: 'Superficie', litologia: 'Kaolinita', color: 'Blanco', textura: 'Polvorosa / Friable', responsable: 'Dra. Laura Ochoa', notas: 'Excelente calidad cerámica. CIC estimado 50 meq/100g.', referencia_barreno_id: null, arcilla_altitud: 308 },
+    { id_muestra: 'ZAC-MAZ-SUP-A.00001', estado: 'Zacatecas', municipio: 'Mazapil', latitud: 24.6500, longitud: -101.5100, fuente: 'Arcillas', origen_arcilla: 'Superficie', litologia: 'Clorita', color: 'Verde intenso', textura: 'Aceitosa / Untuosa', responsable: 'Dr. Andrés Fuentes', notas: 'Clorita secundaria de alteración hidrotermal. Traza de Cu.', referencia_barreno_id: null, arcilla_altitud: 1815 },
+    { id_muestra: 'SLP-CHA-SUP-A.00001', estado: 'San Luis Potosí', municipio: 'Charcas', latitud: 23.1500, longitud: -101.1400, fuente: 'Arcillas', origen_arcilla: 'Superficie', litologia: 'Montmorillonita', color: 'Blanco verdoso', textura: 'Pastosa / Expansiva', responsable: 'M.C. Felipe Ruiz', notas: 'Alto poder expansivo. Uso potencial en pellets de bentonita.', referencia_barreno_id: null, arcilla_altitud: 2096 },
+    { id_muestra: 'JAL-BOL-SUP-A.00001', estado: 'Jalisco', municipio: 'Bolaños', latitud: 21.7600, longitud: -103.7900, fuente: 'Arcillas', origen_arcilla: 'Superficie', litologia: 'Kaolinita', color: 'Blanco amarillento', textura: 'Polvorosa / Friable', responsable: 'Dra. Sofía Mendoza', notas: 'Asociada a ignimbrita riolítica. Alta pureza. Potencial industrial.', referencia_barreno_id: null, arcilla_altitud: 1475 },
+    { id_muestra: 'SON-URE-SUP-A.00001', estado: 'Sonora', municipio: 'Ures', latitud: 29.4400, longitud: -110.4100, fuente: 'Arcillas', origen_arcilla: 'Superficie', litologia: 'Bentonita', color: 'Verde olivo', textura: 'Pastosa / Plástica', responsable: 'M.C. Elena Vásquez', notas: 'Bentonita con propiedades géticas excelentes. Posible smectita sódica.', referencia_barreno_id: null, arcilla_altitud: 538 },
+    { id_muestra: 'SON-SAA-SUP-A.00001', estado: 'Sonora', municipio: 'Santa Ana', latitud: 30.5600, longitud: -111.1400, fuente: 'Arcillas', origen_arcilla: 'Superficie', litologia: 'Montmorillonita', color: 'Verde pálido', textura: 'Pastosa / Plástica', responsable: 'M.C. Elena Vásquez', notas: 'Muestra de superficie. Consistente con intervalo de núcleo BRN-004.', referencia_barreno_id: null, arcilla_altitud: 725 },
+
+    // ── Núcleo (referenciadas a barrenos) ──
+    { id_muestra: 'SON-ALT-PROF-A.00001', estado: 'Sonora', municipio: 'Altar', latitud: 30.7194, longitud: -111.8407, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Bentonita', color: 'Verde grisáceo', textura: 'Pastosa / Plástica', responsable: 'M.C. Elena Vásquez', notas: 'Bentonita en intervalo de mayor interés del BRN-001 (40-60m).', referencia_barreno_id: 'SEFMP31-SON-BRN-001', referencia_intervalo_id: 'INT-003', arcilla_desde: 40, arcilla_hasta: 55, arcilla_estructuras: 'Laminación paralela, bioturbación parcial' },
+    { id_muestra: 'SON-ALT-PROF-A.00002', estado: 'Sonora', municipio: 'Altar', latitud: 30.7194, longitud: -111.8407, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Montmorillonita', color: 'Gris verdoso', textura: 'Pastosa / Expansiva', responsable: 'M.C. Elena Vásquez', notas: 'Contacto litológico toba/bentonita a 40m. Muestra de transición.', referencia_barreno_id: 'SEFMP31-SON-BRN-001', referencia_intervalo_id: 'INT-002', arcilla_desde: 32, arcilla_hasta: 40, arcilla_estructuras: 'Fractura subvertical rellena' },
+    { id_muestra: 'SON-CAB-PROF-A.00001', estado: 'Sonora', municipio: 'Caborca', latitud: 30.7082, longitud: -112.1631, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Illita', color: 'Amarillo pálido', textura: 'Harinosa / Seca', responsable: 'Dra. Laura Ochoa', notas: 'Illita en zona de cizalla. Intercrecimiento con caolinita en contactos.', referencia_barreno_id: 'SEFMP31-SON-BRN-002', referencia_intervalo_id: 'INT-002', arcilla_desde: 35, arcilla_hasta: 50, arcilla_estructuras: 'Espejo de falla, estrías' },
+    { id_muestra: 'SON-CAB-PROF-A.00002', estado: 'Sonora', municipio: 'Caborca', latitud: 30.7082, longitud: -112.1631, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Kaolinita', color: 'Blanco crema', textura: 'Terrosa / Friable', responsable: 'Dra. Laura Ochoa', notas: 'Kaolinita supérgena en gneis fracturado. Alta cristalinidad.', referencia_barreno_id: 'SEFMP31-SON-BRN-002', referencia_intervalo_id: 'INT-003', arcilla_desde: 70, arcilla_hasta: 85, arcilla_estructuras: 'Diaclasas rellenas' },
+    { id_muestra: 'SON-URE-PROF-A.00001', estado: 'Sonora', municipio: 'Ures', latitud: 29.4286, longitud: -110.3977, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Bentonita', color: 'Verde olivo', textura: 'Pastosa / Plástica', responsable: 'M.C. Elena Vásquez', notas: 'Bentonita sódica de alta calidad. CIC medido: 92 meq/100g. Prioridad de análisis.', referencia_barreno_id: 'SEFMP31-SON-BRN-003', referencia_intervalo_id: 'INT-002', arcilla_desde: 18, arcilla_hasta: 38, arcilla_estructuras: 'Laminación milimétrica, color bandeado' },
+    { id_muestra: 'ZAC-MAZ-PROF-A.00001', estado: 'Zacatecas', municipio: 'Mazapil', latitud: 24.6319, longitud: -101.5492, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Clorita', color: 'Verde intenso', textura: 'Aceitosa / Untuosa', responsable: 'Dr. Andrés Fuentes', notas: 'Clorita de alteración en skarn de contacto. Asociada con magnetita.', referencia_barreno_id: 'SEFMP31-ZAC-BRN-001', referencia_intervalo_id: 'INT-002', arcilla_desde: 28, arcilla_hasta: 55, arcilla_estructuras: 'Bandeamiento metasomático' },
+    { id_muestra: 'SLP-CHA-PROF-A.00001', estado: 'San Luis Potosí', municipio: 'Charcas', latitud: 23.1319, longitud: -101.1131, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Montmorillonita', color: 'Blanco verdoso', textura: 'Pastosa / Expansiva', responsable: 'M.C. Felipe Ruiz', notas: 'Montmorillonita pura. CIC 78 meq/100g. Perfil completo de alteración en lutita.', referencia_barreno_id: 'SEFMP31-SLP-BRN-001', referencia_intervalo_id: 'INT-002', arcilla_desde: 22, arcilla_hasta: 38, arcilla_estructuras: 'Laminación paralela' },
+    { id_muestra: 'JAL-BOL-PROF-A.00001', estado: 'Jalisco', municipio: 'Bolaños', latitud: 21.7419, longitud: -103.7731, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Kaolinita', color: 'Blanco amarillento', textura: 'Polvorosa / Friable', responsable: 'Dra. Sofía Mendoza', notas: 'Kaolinita de alta pureza. Alunita secundaria. Perfil de altreación argilíca avanzada.', referencia_barreno_id: 'SEFMP31-JAL-BRN-001', referencia_intervalo_id: 'INT-002', arcilla_desde: 33, arcilla_hasta: 60, arcilla_estructuras: 'Fracturación subhorizontal, relleno de arcilla' },
+    { id_muestra: 'SON-SAA-PROF-A.00001', estado: 'Sonora', municipio: 'Santa Ana', latitud: 30.5439, longitud: -111.1212, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Montmorillonita', color: 'Verde pálido', textura: 'Pastosa / Plástica', responsable: 'M.C. Elena Vásquez', notas: 'Smectita en depósito lacustre. Alta expansividad. Anomalía gravimétrica mayor en la zona.', referencia_barreno_id: 'SEFMP31-SON-BRN-004', referencia_intervalo_id: 'INT-002', arcilla_desde: 12, arcilla_hasta: 30, arcilla_estructuras: 'Laminación fina, ripples preservados' },
+    { id_muestra: 'SON-SAA-PROF-A.00002', estado: 'Sonora', municipio: 'Santa Ana', latitud: 30.5439, longitud: -111.1212, fuente: 'Arcillas', origen_arcilla: 'Profundidad (Nucleo)', litologia: 'Pirofilita', color: 'Gris verdoso', textura: 'Untuosa / Brillante', responsable: 'M.C. Elena Vásquez', notas: 'Pirofilita secundaria. Interesante por valor industrial (refractarios). No expansiva.', referencia_barreno_id: 'SEFMP31-SON-BRN-004', referencia_intervalo_id: 'INT-002', arcilla_desde: 30, arcilla_hasta: 35, arcilla_estructuras: 'Planos de clivaje bien definidos' },
+];
+
+
+/* ══════════════════════════════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════════════════════════════ */
+let map, clusterBarrenos, clusterSup, clusterNuc;
+let layerBarrenos = null, layerSup = null, layerNuc = null;
+let layerVisible = { barrenos: true, superficie: true, nucleo: true };
+let activeFilters = { estado: '', fuente: '', search: '' };
+let filteredBarrenos = [...DEMO_BARRENOS];
+let filteredMuestras = [...DEMO_MUESTRAS];
+let chartTipo = null, chartLito = null, chartTCR = null;
+
+
+/* ══════════════════════════════════════════════════════
+   INICIALIZACIÓN DEL MAPA
+══════════════════════════════════════════════════════ */
+function initMap() {
+    map = L.map('map', {
+        center: [26.5, -108.0],
+        zoom: 5,
+        zoomControl: true
+    });
+
+    const baseLayers = {
+        'Claro (CartoDB)': L.tileLayer(
+            'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+            { attribution: '© CartoDB · OSM', maxZoom: 19 }
+        ),
+        'Satélite (ESRI)': L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            { attribution: '© Esri', maxZoom: 19 }
+        ),
+        'Terreno (Stadia)': L.tileLayer(
+            'https://tiles.stadiamaps.com/tiles/stamen_terrain_background/{z}/{x}/{y}{r}.png',
+            { attribution: '© Stadia Maps', maxZoom: 18 }
+        )
+    };
+    baseLayers['Claro (CartoDB)'].addTo(map);
+    L.control.layers(baseLayers, {}, { position: 'topright', collapsed: true }).addTo(map);
+
+    buildLegend();
+    renderMap();
+    hideLoader();
+}
+
+/* ══════════════════════════════════════════════════════
+   ICONOS PERSONALIZADOS
+══════════════════════════════════════════════════════ */
+function iconBarreno(id) {
+    const short = id.split('-').slice(-1)[0];
+    return L.divIcon({
+        className: '',
+        html: `<div style="
+            width:34px;height:34px;border-radius:8px;
+            background:#1E5B4F;border:2px solid #fff;
+            box-shadow:0 2px 8px rgba(0,0,0,.3);
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            font-family:'Noto Sans',sans-serif;cursor:pointer;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="white" stroke-width="2.5" style="flex-shrink:0">
+                <path d="M12 2L8 6h3v4l-3 3 1 1 3-3 3 3 1-1-3-3V6h3L12 2z"/>
+                <line x1="12" y1="13" x2="12" y2="22"/>
+                <line x1="8"  y1="22" x2="16" y2="22"/>
+            </svg>
+            <span style="color:#fff;font-size:7px;font-weight:800;line-height:1;margin-top:1px">${short}</span>
+        </div>
+        <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #1E5B4F;margin:0 auto;"></div>`,
+        iconSize: [34, 41],
+        iconAnchor: [17, 41],
+        popupAnchor: [0, -41]
+    });
+}
+
+function iconSuperficie() {
+    return L.divIcon({
+        className: '',
+        html: `<div style="
+            width:28px;height:28px;border-radius:50%;
+            background:#A57F2C;border:2.5px solid #fff;
+            box-shadow:0 2px 6px rgba(0,0,0,.25);
+            display:flex;align-items:center;justify-content:center;
+            font-family:'Noto Sans',sans-serif;cursor:pointer;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="white">
+                <path d="M2 20 Q6 12 12 14 Q18 16 22 8 L22 20 Z"/>
+            </svg>
+        </div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -14]
+    });
+}
+
+function iconNucleo() {
+    return L.divIcon({
+        className: '',
+        html: `<div style="
+            width:28px;height:28px;border-radius:6px;
+            background:#9B2247;border:2.5px solid #fff;
+            box-shadow:0 2px 6px rgba(0,0,0,.25);
+            display:flex;align-items:center;justify-content:center;
+            font-family:'Noto Sans',sans-serif;cursor:pointer;
+            transform:rotate(45deg);">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="white" style="transform:rotate(-45deg)">
+                <circle cx="12" cy="12" r="4"/>
+                <line x1="12" y1="2" x2="12" y2="8" stroke="white" stroke-width="2"/>
+                <line x1="12" y1="16" x2="12" y2="22" stroke="white" stroke-width="2"/>
+            </svg>
+        </div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -14]
+    });
+}
+
+/* ══════════════════════════════════════════════════════
+   POPUPS
+══════════════════════════════════════════════════════ */
+function popupBarreno(b) {
+    const mCount = DEMO_MUESTRAS.filter(m => m.referencia_barreno_id === b.id).length;
+    const tcrPct = b.tcr ? (b.tcr * 100).toFixed(1) + '%' : 'N/D';
+    return `
+    <div style="font-family:'Noto Sans',sans-serif;width:280px;overflow:hidden;">
+        <div style="background:#1E5B4F;padding:10px 12px;">
+            <div style="color:#fff;font-size:12px;font-weight:700">${b.id}</div>
+            <div style="color:rgba(255,255,255,.75);font-size:10px;margin-top:2px">${b.municipio}, ${b.estado}</div>
+        </div>
+        <div style="padding:10px 12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                ${popField('Proyecto', b.proyecto.length > 30 ? b.proyecto.substring(0,30)+'…' : b.proyecto)}
+                ${popField('Responsable', b.responsable)}
+                ${popField('Tipo barrenación', b.tipo_barrenacion)}
+                ${popField('Longitud perforada', b.longitud_perforada + ' m')}
+                ${popField('TCR (recuperación)', tcrPct)}
+                ${popField('Muestras núcleo', mCount + ' registradas')}
             </div>
-            <div id="map" class="map-view">
-                <div class="map-placeholder">
-                    <i class="fa-solid fa-map"></i>
-                    <p class="text-lg font-semibold">Mapa Interactivo</p>
-                    <p class="text-sm">Integración con Leaflet pendiente</p>
-                </div>
+            <div style="background:#f0faf7;border-radius:6px;padding:7px 8px;margin-bottom:8px;font-size:10px;color:#1E5B4F;border-left:3px solid #1E5B4F">
+                <strong>Litología:</strong> ${b.litologia_local}
+            </div>
+            <div style="text-align:center">
+                <button onclick="openExpediente('${b.id}','barreno')" style="
+                    background:#9B2247;color:#fff;border:none;
+                    padding:6px 16px;border-radius:6px;
+                    font-size:11px;font-weight:600;cursor:pointer;
+                    font-family:'Noto Sans',sans-serif;">
+                    <i class='bi bi-folder2-open'></i> Ver Expediente
+                </button>
             </div>
         </div>
+    </div>`;
+}
 
-        <!-- Legend -->
-        <div class="legend-card">
-            <h3 class="legend-title">
-                <i class="fa-solid fa-circle-info"></i>
-                Leyenda del Mapa
-            </h3>
-            <div class="legend-grid">
-                <div class="legend-item">
-                    <div class="legend-marker" style="background: #10B981;"></div>
-                    <span class="legend-label">Alta concentración (>400 ppm)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-marker" style="background: #F59E0B;"></div>
-                    <span class="legend-label">Media concentración (200-400 ppm)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-marker" style="background: #EF4444;"></div>
-                    <span class="legend-label">Baja concentración (<200 ppm)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-marker" style="background: #6B7280;"></div>
-                    <span class="legend-label">En exploración</span>
-                </div>
-            </div>
+function popupMuestra(m) {
+    const tipoLabel = m.origen_arcilla === 'Superficie' ? 'Superficie' : 'Núcleo';
+    const tipoColor = m.origen_arcilla === 'Superficie' ? '#A57F2C' : '#9B2247';
+    const profInfo = m.arcilla_desde != null
+        ? `<div style="margin-bottom:6px;background:#fef5f0;border-radius:5px;padding:6px 8px;font-size:10px;color:#9B2247;border-left:3px solid #9B2247">
+            <strong>Profundidad:</strong> ${m.arcilla_desde} – ${m.arcilla_hasta} m<br>
+            ${m.arcilla_estructuras ? '<strong>Estructuras:</strong> ' + m.arcilla_estructuras : ''}
+           </div>` : '';
+    return `
+    <div style="font-family:'Noto Sans',sans-serif;width:270px;overflow:hidden;">
+        <div style="background:${tipoColor};padding:10px 12px;">
+            <div style="color:#fff;font-size:11px;font-weight:700">${m.id_muestra}</div>
+            <div style="color:rgba(255,255,255,.75);font-size:10px;margin-top:2px">${m.municipio}, ${m.estado}</div>
         </div>
-
-        <!-- Info Cards -->
-        <div class="info-grid">
-            <div class="info-card">
-                <div class="info-icon">
-                    <i class="fa-solid fa-mountain"></i>
-                </div>
-                <h3 class="info-title">Yacimientos Identificados</h3>
-                <p class="info-text">
-                    Se han identificado 47 yacimientos potenciales de litio en 8 estados de la República Mexicana, 
-                    con diferentes niveles de concentración y tipos de depósito.
-                </p>
+        <div style="padding:10px 12px;">
+            <div style="margin-bottom:7px">
+                <span style="background:${tipoColor}20;color:${tipoColor};font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px">${tipoLabel}</span>
             </div>
-
-            <div class="info-card">
-                <div class="info-icon">
-                    <i class="fa-solid fa-flask-vial"></i>
-                </div>
-                <h3 class="info-title">Análisis en Curso</h3>
-                <p class="info-text">
-                    Actualmente se están realizando estudios geológicos y análisis de laboratorio en 12 sitios 
-                    prioritarios para determinar la viabilidad de extracción.
-                </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;">
+                ${popField('Litología', m.litologia)}
+                ${popField('Color', m.color)}
+                ${popField('Textura', m.textura)}
+                ${popField('Responsable', m.responsable.split(' ').slice(-1)[0])}
             </div>
-
-            <div class="info-card">
-                <div class="info-icon">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <h3 class="info-title">Áreas Protegidas</h3>
-                <p class="info-text">
-                    El sistema considera la proximidad a áreas naturales protegidas y sitios Ramsar para 
-                    garantizar la sustentabilidad ambiental de las operaciones.
-                </p>
-            </div>
+            ${profInfo}
+            <div style="font-size:9px;color:#6B7280;margin-bottom:8px;line-height:1.4">${m.notas}</div>
+            ${m.referencia_barreno_id ? `<div style="text-align:center">
+                <button onclick="openExpediente('${m.referencia_barreno_id}','barreno')" style="
+                    background:#9B2247;color:#fff;border:none;
+                    padding:6px 14px;border-radius:6px;
+                    font-size:10px;font-weight:600;cursor:pointer;
+                    font-family:'Noto Sans',sans-serif;">
+                    <i class='bi bi-folder2-open'></i> Ver Barreno Asociado
+                </button>
+            </div>` : ''}
         </div>
-    </main>
+    </div>`;
+}
 
-    <site-bottom-nav></site-bottom-nav>
+function popField(label, value) {
+    return `<div>
+        <div style="font-size:8px;color:#6B7280;text-transform:uppercase;letter-spacing:.3px;font-weight:600;margin-bottom:1px">${label}</div>
+        <div style="font-size:10px;font-weight:600;color:#1F2937">${value || '—'}</div>
+    </div>`;
+}
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="config.js"></script>
-    <script src="js/shared/preloader.js"></script>
-    <script src="js/shared/shared-layout.js"></script>
-    <script src="js/shared/shared-breadcrumbs.js"></script>
-    <script src="js/shared/auth.js"></script>
+/* ══════════════════════════════════════════════════════
+   RENDERIZAR MARCADORES
+══════════════════════════════════════════════════════ */
+function renderMap() {
+    // Limpiar capas anteriores
+    if (layerBarrenos) map.removeLayer(layerBarrenos);
+    if (layerSup) map.removeLayer(layerSup);
+    if (layerNuc) map.removeLayer(layerNuc);
 
-    <script>
-        // Demo: Inicializar mapa básico cuando se integre Leaflet
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Mapa de yacimientos cargado - Demo mode');
-            // Aquí se inicializará el mapa real con Leaflet
+    // Crear grupos con clustering
+    layerBarrenos = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: 9 });
+    layerSup      = L.markerClusterGroup({ maxClusterRadius: 30, disableClusteringAtZoom: 10 });
+    layerNuc      = L.markerClusterGroup({ maxClusterRadius: 30, disableClusteringAtZoom: 10 });
+
+    // Barrenos
+    filteredBarrenos.forEach(b => {
+        const marker = L.marker([b.latitud, b.longitud], { icon: iconBarreno(b.id) });
+        marker.bindPopup(popupBarreno(b), { maxWidth: 300, className: 'siil-popup' });
+        layerBarrenos.addLayer(marker);
+    });
+
+    // Muestras superficie
+    filteredMuestras
+        .filter(m => m.origen_arcilla === 'Superficie')
+        .forEach(m => {
+            const lat = m.arcilla_latitud || m.latitud;
+            const lng = m.arcilla_longitud || m.longitud;
+            const marker = L.marker([lat, lng], { icon: iconSuperficie() });
+            marker.bindPopup(popupMuestra(m), { maxWidth: 290, className: 'siil-popup' });
+            layerSup.addLayer(marker);
         });
-    </script>
-</body>
 
+    // Muestras núcleo
+    filteredMuestras
+        .filter(m => m.origen_arcilla === 'Profundidad (Nucleo)')
+        .forEach(m => {
+            const lat = m.latitud + (Math.random() * 0.004 - 0.002); // small offset to avoid overlap
+            const lng = m.longitud + (Math.random() * 0.004 - 0.002);
+            const marker = L.marker([lat, lng], { icon: iconNucleo() });
+            marker.bindPopup(popupMuestra(m), { maxWidth: 290, className: 'siil-popup' });
+            layerNuc.addLayer(marker);
+        });
+
+    // Agregar al mapa según visibilidad
+    if (layerVisible.barrenos) map.addLayer(layerBarrenos);
+    if (layerVisible.superficie) map.addLayer(layerSup);
+    if (layerVisible.nucleo) map.addLayer(layerNuc);
+}
+
+/* ══════════════════════════════════════════════════════
+   LEYENDA
+══════════════════════════════════════════════════════ */
+function buildLegend() {
+    const legend = L.control({ position: 'bottomleft' });
+    legend.onAdd = function() {
+        const div = L.DomUtil.create('div');
+        div.style.cssText = `
+            background:rgba(255,255,255,.97);padding:10px 14px;
+            border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.15);
+            font-family:'Noto Sans',sans-serif;font-size:11px;
+            border:1px solid #E5E7EB;min-width:155px;`;
+        div.innerHTML = `
+            <div style="font-size:10px;font-weight:700;color:#9B2247;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">Leyenda</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                <div style="width:14px;height:14px;background:#1E5B4F;border-radius:3px;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
+                <span>Barrenos</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                <div style="width:14px;height:14px;background:#A57F2C;border-radius:50%;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
+                <span>Arc. Superficie</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:14px;height:14px;background:#9B2247;border-radius:3px;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transform:rotate(45deg)"></div>
+                <span>Arc. Núcleo</span>
+            </div>`;
+        return div;
+    };
+    legend.addTo(map);
+}
+
+/* ══════════════════════════════════════════════════════
+   FILTROS
+══════════════════════════════════════════════════════ */
+function applyFilters() {
+    activeFilters.estado = document.getElementById('filter-estado').value;
+    activeFilters.fuente = document.getElementById('filter-fuente').value;
+    activeFilters.search = document.getElementById('filter-search').value.toLowerCase().trim();
+
+    filteredBarrenos = DEMO_BARRENOS.filter(b => {
+        if (activeFilters.estado && b.estado !== activeFilters.estado) return false;
+        if (activeFilters.fuente && activeFilters.fuente !== 'Barreno') return false;
+        if (activeFilters.search && !b.id.toLowerCase().includes(activeFilters.search)
+            && !b.proyecto.toLowerCase().includes(activeFilters.search)
+            && !b.estado.toLowerCase().includes(activeFilters.search)
+            && !b.municipio.toLowerCase().includes(activeFilters.search)) return false;
+        return true;
+    });
+
+    filteredMuestras = DEMO_MUESTRAS.filter(m => {
+        if (activeFilters.estado && m.estado !== activeFilters.estado) return false;
+        if (activeFilters.fuente === 'Barreno') return false;
+        if (activeFilters.fuente === 'Superficie' && m.origen_arcilla !== 'Superficie') return false;
+        if (activeFilters.fuente === 'Nucleo' && m.origen_arcilla !== 'Profundidad (Nucleo)') return false;
+        if (activeFilters.search && !m.id_muestra.toLowerCase().includes(activeFilters.search)
+            && !m.estado.toLowerCase().includes(activeFilters.search)
+            && !m.litologia.toLowerCase().includes(activeFilters.search)) return false;
+        return true;
+    });
+
+    renderMap();
+    updateKPIs();
+    renderBarrenoList();
+    updateCharts();
+    showNotif(`Filtros aplicados — ${filteredBarrenos.length} barrenos · ${filteredMuestras.length} muestras`);
+}
+
+function resetFilters() {
+    document.getElementById('filter-estado').value = '';
+    document.getElementById('filter-fuente').value = '';
+    document.getElementById('filter-search').value = '';
+    activeFilters = { estado: '', fuente: '', search: '' };
+    filteredBarrenos = [...DEMO_BARRENOS];
+    filteredMuestras = [...DEMO_MUESTRAS];
+    renderMap();
+    updateKPIs();
+    renderBarrenoList();
+    updateCharts();
+}
+
+/* ══════════════════════════════════════════════════════
+   TOGGLE CAPAS
+══════════════════════════════════════════════════════ */
+function toggleChip(el, layer) {
+    layerVisible[layer] = !layerVisible[layer];
+    const layerMap = { barrenos: layerBarrenos, superficie: layerSup, nucleo: layerNuc };
+    const classMap = {
+        barrenos: 'active-barreno',
+        superficie: 'active-superficie',
+        nucleo: 'active-nucleo'
+    };
+
+    if (layerVisible[layer]) {
+        map.addLayer(layerMap[layer]);
+        el.className = `chip ${classMap[layer]}`;
+    } else {
+        map.removeLayer(layerMap[layer]);
+        el.className = 'chip inactive';
+    }
+}
+
+/* ══════════════════════════════════════════════════════
+   ACTUALIZAR KPIs
+══════════════════════════════════════════════════════ */
+function updateKPIs() {
+    const sup = filteredMuestras.filter(m => m.origen_arcilla === 'Superficie').length;
+    const nuc = filteredMuestras.filter(m => m.origen_arcilla === 'Profundidad (Nucleo)').length;
+    animNum('kpi-barrenos', filteredBarrenos.length);
+    animNum('kpi-total', filteredMuestras.length);
+    animNum('kpi-sup', sup);
+    animNum('kpi-nuc', nuc);
+    document.getElementById('barrenos-count').textContent = filteredBarrenos.length;
+}
+
+function animNum(id, target) {
+    const el = document.getElementById(id);
+    const start = parseInt(el.textContent) || 0;
+    const duration = 600;
+    const startTime = performance.now();
+    function step(now) {
+        const p = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(start + (target - start) * ease);
+        if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+/* ══════════════════════════════════════════════════════
+   LISTA DE BARRENOS (sidebar)
+══════════════════════════════════════════════════════ */
+function renderBarrenoList() {
+    const container = document.getElementById('barreno-list');
+    container.innerHTML = '';
+    filteredBarrenos.forEach(b => {
+        const mCount = filteredMuestras.filter(m => m.referencia_barreno_id === b.id).length;
+        const item = document.createElement('div');
+        item.className = 'barreno-item';
+        item.innerHTML = `
+            <div class="barreno-icon">${b.id.split('-').slice(-1)[0]}</div>
+            <div class="barreno-info">
+                <div class="barreno-id">${b.id}</div>
+                <div class="barreno-sub">${b.municipio}, ${b.estado} · ${b.longitud_perforada}m prof.</div>
+            </div>
+            ${mCount > 0 ? `<span class="barreno-muestras-count">${mCount} muestras</span>` : ''}`;
+        item.onclick = () => {
+            openExpediente(b.id, 'barreno');
+            // centrar mapa
+            map.setView([b.latitud, b.longitud], 12, { animate: true });
+        };
+        container.appendChild(item);
+    });
+}
+
+/* ══════════════════════════════════════════════════════
+   GRÁFICAS
+══════════════════════════════════════════════════════ */
+Chart.defaults.font.family = "'Noto Sans', sans-serif";
+Chart.defaults.color = '#6B7280';
+
+function buildCharts() {
+    // Chart 1 — Donut tipos
+    const ctxTipo = document.getElementById('chartTipo').getContext('2d');
+    chartTipo = new Chart(ctxTipo, {
+        type: 'doughnut',
+        data: {
+            labels: ['Arc. Superficie', 'Arc. Núcleo'],
+            datasets: [{
+                data: [8, 10],
+                backgroundColor: ['#A57F2C', '#9B2247'],
+                borderColor: '#ffffff',
+                borderWidth: 3,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true, cutout: '62%',
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}` } }
+            }
+        }
+    });
+
+    // Chart 2 — Litología bar horizontal
+    const litoData = getLitoData();
+    const ctxLito = document.getElementById('chartLito').getContext('2d');
+    chartLito = new Chart(ctxLito, {
+        type: 'bar',
+        data: {
+            labels: litoData.labels,
+            datasets: [{
+                data: litoData.values,
+                backgroundColor: ['#9B2247','#1E5B4F','#A57F2C','#2563EB','#7C3AED','#059669'],
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 }, stepSize: 1 } },
+                y: { grid: { display: false }, ticks: { font: { size: 9 } } }
+            }
+        }
+    });
+
+    // Chart 3 — TCR bar
+    const ctxTCR = document.getElementById('chartTCR').getContext('2d');
+    chartTCR = new Chart(ctxTCR, {
+        type: 'bar',
+        data: {
+            labels: DEMO_BARRENOS.map(b => b.id.replace('SEFMP31-', '')),
+            datasets: [{
+                label: 'TCR',
+                data: DEMO_BARRENOS.map(b => (b.tcr * 100).toFixed(1)),
+                backgroundColor: DEMO_BARRENOS.map(b =>
+                    b.tcr >= 0.9 ? '#10B981' : b.tcr >= 0.8 ? '#F59E0B' : '#EF4444'
+                ),
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 8 } } },
+                y: {
+                    min: 70, max: 100,
+                    grid: { color: '#f1f5f9' },
+                    ticks: { font: { size: 9 }, callback: v => v + '%' }
+                }
+            }
+        }
+    });
+}
+
+function getLitoData() {
+    const counts = {};
+    filteredMuestras.forEach(m => {
+        counts[m.litologia] = (counts[m.litologia] || 0) + 1;
+    });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    return { labels: sorted.map(e => e[0]), values: sorted.map(e => e[1]) };
+}
+
+function updateCharts() {
+    if (!chartTipo || !chartLito) return;
+    const sup = filteredMuestras.filter(m => m.origen_arcilla === 'Superficie').length;
+    const nuc = filteredMuestras.filter(m => m.origen_arcilla === 'Profundidad (Nucleo)').length;
+    chartTipo.data.datasets[0].data = [sup, nuc];
+    chartTipo.update();
+
+    const litoData = getLitoData();
+    chartLito.data.labels = litoData.labels;
+    chartLito.data.datasets[0].data = litoData.values;
+    chartLito.update();
+}
+
+/* ══════════════════════════════════════════════════════
+   EXPEDIENTE PANEL
+══════════════════════════════════════════════════════ */
+function openExpediente(id, type) {
+    const panel = document.getElementById('expediente-panel');
+    const b = DEMO_BARRENOS.find(x => x.id === id);
+    if (!b) return;
+
+    const muestrasAsoc = DEMO_MUESTRAS.filter(m => m.referencia_barreno_id === b.id);
+
+    // Header
+    document.getElementById('exp-title').textContent = b.id;
+    document.getElementById('exp-sub').textContent = `${b.municipio}, ${b.estado} · ${b.longitud_perforada}m perforados`;
+    document.getElementById('exp-icon').innerHTML = '<i class="bi bi-geo-alt-fill" style="color:#fff;font-size:16px"></i>';
+
+    // TAB: Datos generales
+    document.getElementById('tab-datos').innerHTML = `
+        <div class="field-group">
+            <div class="field-group-title">Identificación</div>
+            <div class="field-grid cols-1">
+                <div class="field-item">
+                    <div class="field-label">ID Barreno</div>
+                    <div class="field-value big mono">${b.id}</div>
+                </div>
+            </div>
+            <div class="field-grid" style="margin-top:8px">
+                ${fieldItem('Proyecto', b.proyecto)}
+                ${fieldItem('Subregión', b.subregion_sigla)}
+                ${fieldItem('Estado', b.estado)}
+                ${fieldItem('Municipio', b.municipio)}
+                ${fieldItem('Perforista', b.perforista)}
+                ${fieldItem('Responsable', b.responsable)}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <div class="field-group-title">Coordenadas y Ubicación</div>
+            <div class="field-grid cols-3">
+                ${fieldItem('Latitud', b.latitud + '°')}
+                ${fieldItem('Longitud', b.longitud + '°')}
+                ${fieldItem('Altitud', b.altitud + ' msnm')}
+                ${fieldItem('Azimut', b.azimut + '°')}
+                ${fieldItem('Inclinación', b.inclinacion + '°')}
+                ${fieldItem('Acceso', b.accesibilidad)}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <div class="field-group-title">Datos de Perforación</div>
+            <div class="field-grid">
+                ${fieldItem('Tipo barrenación', b.tipo_barrenacion)}
+                ${fieldItem('Fecha inicio', b.fecha_inicio)}
+                ${fieldItem('Fecha fin', b.fecha_fin)}
+                ${fieldItem('Long. perforada', b.longitud_perforada + ' m')}
+                ${fieldItem('Long. recuperada', b.longitud_recuperada + ' m')}
+                ${fieldItem('Diámetro', b.diametro_mm + ' mm')}
+                ${fieldItem('Núm. cajas', b.numero_cajas)}
+                ${fieldItem('Nombre cajas', b.nombre_cajas)}
+                ${fieldItem('RQD', b.rqd)}
+                ${fieldItem('TCR', (b.tcr * 100).toFixed(1) + '%')}
+            </div>
+        </div>
+
+        <div class="field-group">
+            <div class="field-group-title">Contexto Geológico</div>
+            <div class="field-grid cols-1">
+                ${fieldItem('Litología local', b.litologia_local)}
+                ${fieldItem('Anomalía gravimétrica', b.anomalia_gravimetrica + ' mGal')}
+            </div>
+            <div style="margin-top:8px;background:#fef5f0;border-radius:6px;padding:8px;border-left:3px solid #9B2247">
+                <div style="font-size:9px;color:#9B2247;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Observaciones de campo</div>
+                <div style="font-size:11px;color:#1F2937;line-height:1.5">${b.observaciones}</div>
+            </div>
+        </div>`;
+
+    // TAB: Intervalos
+    const intsHtml = b.intervalos.map(i => `
+        <tr>
+            <td><strong>${i.intervalo_id}</strong></td>
+            <td>${i.desde}</td>
+            <td>${i.hasta}</td>
+            <td>${(i.hasta - i.desde).toFixed(1)}</td>
+            <td>${i.litologia}</td>
+            <td>${i.color}</td>
+            <td><span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:${i.recuperacion==='Excelente'?'#d1fae5':i.recuperacion==='Buena'?'#dbeafe':'#fef3c7'};color:${i.recuperacion==='Excelente'?'#065f46':i.recuperacion==='Buena'?'#1e40af':'#92400e'}">${i.recuperacion}</span></td>
+        </tr>`).join('');
+    document.getElementById('tab-intervalos').innerHTML = `
+        <div class="field-group">
+            <div class="field-group-title">Intervalos del Núcleo (${b.intervalos.length} registrados)</div>
+            <div style="overflow-x:auto">
+                <table class="int-table">
+                    <thead>
+                        <tr>
+                            <th>ID Intervalo</th><th>Desde (m)</th><th>Hasta (m)</th><th>Long.</th><th>Litología</th><th>Color</th><th>Recuperación</th>
+                        </tr>
+                    </thead>
+                    <tbody>${intsHtml}</tbody>
+                </table>
+            </div>
+        </div>
+        <div style="background:#e6f0ee;border-radius:6px;padding:8px;font-size:10px;color:#1E5B4F;font-weight:600">
+            <i class="bi bi-info-circle-fill"></i> Total perforado: <strong>${b.longitud_perforada} m</strong> ·
+            Recuperado: <strong>${b.longitud_recuperada} m</strong> ·
+            TCR: <strong>${(b.tcr*100).toFixed(1)}%</strong>
+        </div>`;
+
+    // TAB: Muestras
+    const mHtml = muestrasAsoc.length === 0
+        ? `<div style="text-align:center;padding:24px;color:#6B7280;font-size:12px">
+            <i class="bi bi-inbox" style="font-size:28px;display:block;margin-bottom:8px;opacity:.4"></i>
+            No hay muestras de núcleo registradas para este barreno.
+           </div>`
+        : muestrasAsoc.map(m => `
+            <div class="muestra-card">
+                <div class="muestra-card-header">
+                    <div class="muestra-card-id">${m.id_muestra}</div>
+                    <span class="type-badge nuc"><i class="bi bi-arrow-down-circle"></i> Núcleo</span>
+                </div>
+                <div class="muestra-card-grid">
+                    ${mcgItem('Litología', m.litologia)}
+                    ${mcgItem('Color', m.color)}
+                    ${mcgItem('Textura', m.textura)}
+                    ${mcgItem('Profundidad', m.arcilla_desde + ' – ' + m.arcilla_hasta + ' m')}
+                    ${m.arcilla_estructuras ? mcgItem('Estructuras', m.arcilla_estructuras) : ''}
+                </div>
+                <div style="margin-top:6px;font-size:9px;color:#6B7280;line-height:1.4;border-top:1px solid #E5E7EB;padding-top:5px">${m.notas}</div>
+            </div>`).join('');
+
+    const supHtml = DEMO_MUESTRAS.filter(m =>
+        m.origen_arcilla === 'Superficie' && m.estado === b.estado && m.municipio === b.municipio
+    );
+    const supSection = supHtml.length > 0 ? `
+        <div class="field-group" style="margin-top:16px">
+            <div class="field-group-title">Muestras de Superficie (mismo municipio)</div>
+            ${supHtml.map(m => `
+                <div class="muestra-card" style="border-left:3px solid #A57F2C">
+                    <div class="muestra-card-header">
+                        <div class="muestra-card-id">${m.id_muestra}</div>
+                        <span class="type-badge sup"><i class="bi bi-layers"></i> Superficie</span>
+                    </div>
+                    <div class="muestra-card-grid">
+                        ${mcgItem('Litología', m.litologia)}
+                        ${mcgItem('Color', m.color)}
+                        ${mcgItem('Textura', m.textura)}
+                    </div>
+                </div>`).join('')}
+        </div>` : '';
+
+    document.getElementById('tab-muestras').innerHTML = `
+        <div class="field-group">
+            <div class="field-group-title">Muestras de Núcleo (${muestrasAsoc.length} asociadas)</div>
+            ${mHtml}
+        </div>
+        ${supSection}`;
+
+    // Activar tab inicial
+    switchTab('datos');
+    panel.classList.add('open');
+}
+
+function closeExpediente() {
+    document.getElementById('expediente-panel').classList.remove('open');
+}
+
+function switchTab(name) {
+    document.querySelectorAll('.exp-tab').forEach((t, i) => {
+        const names = ['datos', 'intervalos', 'muestras'];
+        t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+}
+
+function fieldItem(label, value) {
+    return `<div class="field-item">
+        <div class="field-label">${label}</div>
+        <div class="field-value">${value || '—'}</div>
+    </div>`;
+}
+function mcgItem(label, value) {
+    return `<div class="mcg-item">
+        <div class="mcg-label">${label}</div>
+        <div class="mcg-value">${value || '—'}</div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   UTILIDADES
+══════════════════════════════════════════════════════ */
+function hideLoader() {
+    const el = document.getElementById('map-loading');
+    if (el) el.classList.add('hidden');
+}
+
+function showNotif(msg) {
+    const el = document.getElementById('map-notif');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ══════════════════════════════════════════════════════
+   ARRANQUE
+══════════════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+    initMap();
+    buildCharts();
+    updateKPIs();
+    renderBarrenoList();
+    showNotif('7 barrenos · 18 muestras de arcillas cargadas');
+});
+</script>
+</body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
