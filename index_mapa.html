@@ -306,7 +306,7 @@
         .expediente-panel {
             position: fixed;
             top: 112px;
-            right: -460px;
+            right: 0;
             width: 440px;
             height: calc(100vh - 112px);
             background: var(--white);
@@ -315,10 +315,11 @@
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            transition: right .3s cubic-bezier(.4,0,.2,1);
+            transform: translateX(calc(100% + 2px));
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
             overflow: hidden;
         }
-        .expediente-panel.open { right: 0; }
+        .expediente-panel.open { transform: translateX(0); }
 
         .exp-header {
             background: var(--verde);
@@ -573,6 +574,7 @@
         .siil-popup-head--barreno { background: linear-gradient(135deg, var(--verde), var(--verde-dark)); }
         .siil-popup-head--superficie { background: linear-gradient(135deg, var(--dorado), #c69433); }
         .siil-popup-head--nucleo { background: linear-gradient(135deg, var(--guinda), var(--guinda-dark)); }
+        .siil-popup-head--salmuera { background: linear-gradient(135deg, #2563EB, #1D4ED8); }
         .siil-popup-kicker { font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.72); margin-bottom: 4px; }
         .siil-popup-title { font-size: 12px; font-weight: 800; line-height: 1.35; }
         .siil-popup-sub { color: rgba(255,255,255,.78); font-size: 10px; margin-top: 3px; }
@@ -597,8 +599,9 @@
             box-shadow: 0 12px 24px rgba(155,34,71,.18);
         }
         .siil-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; font-size: 9px; font-weight: 800; margin-bottom: 8px; }
-        .siil-pill--superficie { background: rgba(165,127,44,.14); color: var(--dorado-dark); }
+        .siil-pill--superficie { background: rgba(165,127,44,.14); color: #8a6723; }
         .siil-pill--nucleo { background: rgba(155,34,71,.12); color: var(--guinda); }
+        .siil-pill--salmuera { background: rgba(37,99,235,.12); color: #1D4ED8; }
         .siil-borehole-icon,
         .siil-surface-icon,
         .siil-core-icon {
@@ -663,6 +666,8 @@
         .siil-map-legend__swatch--barreno { border-radius: 5px; background: linear-gradient(135deg, var(--verde), var(--verde-dark)); }
         .siil-map-legend__swatch--superficie { border-radius: 999px; background: radial-gradient(circle at 35% 30%, #c89b47, var(--dorado)); }
         .siil-map-legend__swatch--nucleo { border-radius: 5px; background: linear-gradient(135deg, var(--guinda), var(--guinda-dark)); transform: rotate(45deg); }
+        .siil-map-legend__swatch--salmuera { border-radius: 999px; background: radial-gradient(circle at 35% 30%, #60a5fa, #2563EB); }
+        .active-salmuera { border-color: #2563EB; color: #2563EB; background: rgba(37,99,235,.08); }
         .leaflet-control-layers {
             border: 1px solid rgba(229,231,235,.92) !important;
             border-radius: 18px !important;
@@ -743,18 +748,20 @@
             position: absolute;
             top: 14px;
             left: 14px;
-            z-index: 650;
+            z-index: 880;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 8px;
             pointer-events: none;
+            max-width: min(720px, calc(100vw - 32px));
         }
         .map-top-toolbar__group {
-            display: flex;
-            gap: 8px;
+            display: contents;
             pointer-events: auto;
         }
         .map-quick-btn {
+            pointer-events: auto;
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -775,8 +782,13 @@
             color: var(--guinda);
             transform: translateY(-1px);
         }
-        .map-export-menu {
-            min-width: 190px;
+        .map-action-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 220px;
+            display: grid;
+            gap: 4px;
             background: rgba(255,255,255,.96);
             border: 1px solid rgba(229,231,235,.92);
             border-radius: 18px;
@@ -786,7 +798,10 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
-        .map-export-menu__item {
+        .map-action-menu[hidden] {
+            display: none !important;
+        }
+        .map-action-menu__item {
             width: 100%;
             display: inline-flex;
             align-items: center;
@@ -801,9 +816,29 @@
             font-family: 'Noto Sans', sans-serif;
             cursor: pointer;
         }
-        .map-export-menu__item:hover {
+        .map-action-menu__item:hover {
             background: rgba(155,34,71,.08);
             color: var(--guinda);
+        }
+        .side-panel.is-collapsed {
+            transform: translateX(calc(-100% - 24px));
+            opacity: 0;
+            pointer-events: none;
+        }
+        .side-panel,
+        .siil-map-legend {
+            transition: transform .28s ease, opacity .28s ease, box-shadow .28s ease;
+        }
+        .siil-map-legend.is-collapsed {
+            transform: translateY(calc(100% + 18px));
+            opacity: 0;
+            pointer-events: none;
+        }
+        .map-quick-btn.is-active {
+            color: var(--guinda);
+            border-color: rgba(155,34,71,.24);
+            background: rgba(255,255,255,.98);
+            box-shadow: 0 16px 30px rgba(155,34,71,.14);
         }
 
         /* carga overlay */
@@ -849,7 +884,208 @@
             #map { min-height: 52vh; }
             .side-panel { order: 2; display: flex; width: 100%; min-width: 100%; border-right: none; border-top: 1px solid var(--border); max-height: none; }
             .side-panel-scroll { max-height: none; }
-            .expediente-panel { width: 100%; right: -100%; top: 76px; height: calc(100vh - 76px); }
+            .expediente-panel { width: 100%; top: 76px; height: calc(100vh - 76px); }
+        }
+
+        /* fullscreen institucional tipo referencia */
+        body.map-fullscreen-mode {
+            overflow: hidden;
+            padding-bottom: 0;
+        }
+        body.map-fullscreen-mode site-breadcrumbs {
+            display: none;
+        }
+        body.map-fullscreen-mode .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+        body.map-fullscreen-mode .map-page-shell {
+            position: fixed;
+            inset: var(--site-header-offset, 84px) 0 0 0;
+            max-width: none;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            height: auto;
+        }
+        body.map-fullscreen-mode .page-intro {
+            display: none;
+        }
+        body.map-fullscreen-mode .main-layout {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+        body.map-fullscreen-mode .side-panel {
+            position: absolute;
+            left: 16px;
+            top: 16px;
+            bottom: calc(var(--site-bottom-nav-offset, 78px) + 16px);
+            z-index: 820;
+            width: min(340px, calc(100vw - 32px));
+            min-width: 0;
+            max-height: none;
+            border-radius: 24px;
+            overflow: hidden;
+            background: rgba(255,255,255,.94);
+            border: 1px solid rgba(229,231,235,.92);
+            box-shadow: 0 20px 40px rgba(15,23,42,.18);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+        body.map-fullscreen-mode .side-panel-scroll {
+            max-height: 100%;
+            height: 100%;
+        }
+        body.map-fullscreen-mode .map-wrapper,
+        body.map-fullscreen-mode #map {
+            width: 100%;
+            height: 100%;
+            min-height: 100%;
+        }
+        body.map-fullscreen-mode .expediente-panel {
+            top: var(--site-header-offset, 84px);
+            right: 0;
+            height: calc(100dvh - var(--site-header-offset, 84px));
+            max-height: none;
+            z-index: 840;
+        }
+        body.map-fullscreen-mode .expediente-panel.open {
+            transform: translateX(0);
+        }
+        body.map-fullscreen-mode .map-top-toolbar {
+            top: 16px;
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+            z-index: 880;
+            justify-content: center;
+            max-width: calc(100vw - 160px);
+        }
+        body.map-fullscreen-mode .map-action-menu {
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+        }
+        body.map-fullscreen-mode .site-bottom-nav {
+            bottom: max(12px, env(safe-area-inset-bottom, 0px));
+            z-index: 950;
+            transition: transform .28s ease, opacity .28s ease, box-shadow .28s ease;
+            transform-origin: bottom center;
+        }
+        body.map-fullscreen-mode.map-nav-collapsed .site-bottom-nav {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(calc(100% + 28px));
+        }
+        body.map-fullscreen-mode .map-logo-stack {
+            right: 16px;
+            bottom: calc(var(--site-bottom-nav-offset, 78px) + 20px);
+        }
+        body.map-fullscreen-mode .leaflet-bottom.leaflet-left {
+            left: 360px;
+        }
+        body.map-fullscreen-mode.expediente-open .leaflet-top.leaflet-right {
+            right: calc(min(440px, 92vw) + 16px);
+        }
+        @media (max-width: 900px) {
+            body.map-fullscreen-mode .side-panel {
+                top: 72px;
+                width: min(88vw, 340px);
+                bottom: calc(var(--site-bottom-nav-offset, 78px) + 16px);
+            }
+            body.map-fullscreen-mode .expediente-panel {
+                width: min(92vw, 420px);
+            }
+            body.map-fullscreen-mode .leaflet-bottom.leaflet-left {
+                left: 16px;
+                bottom: calc(var(--site-bottom-nav-offset, 78px) + 12px);
+            }
+            body.map-fullscreen-mode .site-bottom-nav {
+                left: 12px;
+                right: 12px;
+                bottom: max(10px, env(safe-area-inset-bottom, 0px));
+                transform: none;
+                max-width: none;
+                border-radius: 1rem;
+            }
+        }
+        @media (max-width: 900px) {
+            body.map-fullscreen-mode .map-top-toolbar {
+                left: 50%;
+                right: auto;
+                top: 14px;
+                transform: translateX(-50%);
+                gap: 6px;
+                max-width: calc(100vw - 156px);
+                justify-content: center;
+            }
+            body.map-fullscreen-mode .map-quick-btn {
+                min-height: 42px;
+                padding: 9px 12px;
+            }
+            body.map-fullscreen-mode .leaflet-top.leaflet-right {
+                top: 64px;
+                right: 14px;
+            }
+            body.map-fullscreen-mode.expediente-open .leaflet-top.leaflet-right {
+                right: calc(min(92vw, 420px) + 12px);
+            }
+            body.map-fullscreen-mode .map-action-menu {
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                margin-left: 0;
+            }
+        }
+        @media (max-width: 640px) {
+            body.map-fullscreen-mode .map-top-toolbar {
+                left: 50%;
+                right: auto;
+                top: 14px;
+                transform: translateX(-50%);
+                display: flex;
+                align-items: start;
+                gap: 6px;
+                max-width: calc(100vw - 132px);
+            }
+            body.map-fullscreen-mode .map-quick-btn {
+                width: auto;
+                justify-content: center;
+                gap: 6px;
+                padding: 9px 12px;
+                font-size: 10px;
+            }
+            body.map-fullscreen-mode .map-quick-btn span {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            body.map-fullscreen-mode .map-action-menu {
+                width: min(220px, calc(100vw - 48px));
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                justify-self: center;
+            }
+            body.map-fullscreen-mode .leaflet-top.leaflet-right {
+                top: 112px;
+                right: 14px;
+            }
+            body.map-fullscreen-mode.expediente-open .leaflet-top.leaflet-right {
+                right: calc(min(92vw, 420px) + 10px);
+            }
+            body.map-fullscreen-mode .leaflet-control-layers-expanded {
+                max-width: min(240px, calc(100vw - 28px));
+            }
         }
     </style>
 </head>
@@ -861,7 +1097,7 @@
 <main class="map-page-shell">
     <section class="page-intro">
         <h1>Mapa de arcillas y barrenos</h1>
-        <p>Vista adaptada desde el demo a la pagina real de SIIL, conservando filtros, KPIs, capas, listado operativo y expediente lateral dentro del layout compartido del sistema.</p>
+        <p>Visor operativo institucional con mapa a pantalla completa, capas base, filtros, KPIs y expediente lateral para barrenos, arcillas y salmueras desde Supabase.</p>
     </section>
 
     <div class="main-layout">
@@ -874,18 +1110,20 @@
             <div class="filter-section">
                 <h4><i class="bi bi-funnel-fill"></i> Filtros</h4>
                 <div class="filter-row">
-                    <select id="filter-estado">
-                        <option value="">Todos los estados</option>
-                        <option value="Sonora">Sonora</option>
-                        <option value="Zacatecas">Zacatecas</option>
-                        <option value="San Luis Potosí">San Luis Potosí</option>
-                        <option value="Jalisco">Jalisco</option>
+                    <select id="filter-estado-barreno">
+                        <option value="">Estado de barrenos</option>
                     </select>
+                    <select id="filter-estado-muestra">
+                        <option value="">Estado de muestras</option>
+                    </select>
+                </div>
+                <div class="filter-row">
                     <select id="filter-fuente">
                         <option value="">Todos los tipos</option>
                         <option value="Barreno">Barrenos</option>
                         <option value="Superficie">Arc. Superficie</option>
                         <option value="Nucleo">Arc. Núcleo</option>
+                        <option value="Salmueras">Salmueras</option>
                     </select>
                 </div>
                 <div class="filter-row">
@@ -908,6 +1146,10 @@
                         <span class="chip-dot" style="background:var(--guinda)"></span>
                         Arc. Núcleo
                     </div>
+                    <div class="chip active-salmuera" data-layer="salmuera" onclick="toggleChip(this, 'salmuera')">
+                        <span class="chip-dot" style="background:#2563EB"></span>
+                        Salmueras
+                    </div>
                 </div>
             </div>
 
@@ -926,14 +1168,14 @@
                     <div class="kpi-desc">arcillas en catálogo</div>
                 </div>
                 <div class="kpi-card c-superficie">
-                    <div class="kpi-label"><i class="bi bi-layers-fill"></i> Superficie</div>
+                    <div class="kpi-label"><i class="bi bi-layers-fill"></i> Arc. Superficie</div>
                     <div class="kpi-value" id="kpi-sup">8</div>
                     <div class="kpi-desc">muestras superficiales</div>
                 </div>
                 <div class="kpi-card c-nucleo">
-                    <div class="kpi-label"><i class="bi bi-arrow-down-circle-fill"></i> Núcleo</div>
+                    <div class="kpi-label"><i class="bi bi-droplet-half"></i> Salmueras</div>
                     <div class="kpi-value" id="kpi-nuc">10</div>
-                    <div class="kpi-desc">muestras de profundidad</div>
+                    <div class="kpi-desc">registros de salmuera</div>
                 </div>
             </div>
 
@@ -981,25 +1223,35 @@
     <div class="map-wrapper">
         <div id="map"></div>
 
-        <div class="map-top-toolbar">
+                <div class="map-top-toolbar">
             <div class="map-top-toolbar__group">
-                <button class="map-quick-btn" id="btn-reset-view" type="button" title="Centrar vista nacional">
+                <button class="map-quick-btn" id="btn-toggle-toolbar-menu" type="button" title="Abrir opciones del mapa" aria-expanded="false">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                    <span>Menú</span>
+                </button>
+            </div>            <div class="map-action-menu" id="map-action-menu" hidden>
+                <button class="map-action-menu__item" id="btn-menu-reset-view" type="button">
                     <i class="bi bi-crosshair"></i>
                     <span>Inicio</span>
                 </button>
-                <button class="map-quick-btn" id="btn-toggle-export" type="button" title="Opciones de exportación">
-                    <i class="bi bi-download"></i>
-                    <span>Exportar</span>
+                <button class="map-action-menu__item" id="btn-menu-filters" type="button">
+                    <i class="bi bi-layout-sidebar-inset"></i>
+                    <span>Filtros</span>
                 </button>
-            </div>
-            <div class="map-export-menu" id="map-export-menu" hidden>
-                <button class="map-export-menu__item" id="btn-export-png" type="button">
+                <button class="map-action-menu__item" id="btn-menu-legend" type="button">
+                    <i class="bi bi-list-stars"></i>
+                    <span>Simbología</span>
+                </button>
+                <button class="map-action-menu__item" id="btn-menu-nav" type="button">
+                    <i class="bi bi-menu-button-wide"></i>
+                    <span>Navegación</span>
+                </button>
+                <button class="map-action-menu__item" id="btn-export-png" type="button">
                     <i class="bi bi-file-earmark-image"></i>
                     <span>Descargar PNG</span>
                 </button>
             </div>
         </div>
-
         <!-- loader -->
         <div class="map-loading" id="map-loading">
             <div class="spinner"></div>
@@ -1276,14 +1528,18 @@ const DEMO_MUESTRAS = [
 /* ══════════════════════════════════════════════════════
    ESTADO GLOBAL
 ══════════════════════════════════════════════════════ */
-let map, clusterBarrenos, clusterSup, clusterNuc;
-let layerBarrenos = null, layerSup = null, layerNuc = null;
-let layerVisible = { barrenos: true, superficie: true, nucleo: true };
-let activeFilters = { estado: '', fuente: '', search: '' };
-let filteredBarrenos = [...DEMO_BARRENOS];
-let filteredMuestras = [...DEMO_MUESTRAS];
+let map, clusterBarrenos, clusterSup, clusterNuc, clusterSal;
+let layerOperational = null;
+let layerVisible = { barrenos: true, superficie: true, nucleo: true, salmuera: true };
+let activeFilters = { estadoBarreno: '', estadoMuestra: '', fuente: '', search: '' };
+let barrenosData = [...DEMO_BARRENOS];
+let muestrasData = [...DEMO_MUESTRAS];
+let filteredBarrenos = [...barrenosData];
+let filteredMuestras = [...muestrasData];
 let chartTipo = null, chartLito = null, chartTCR = null;
 let mapContextLayers = {};
+let mapLegendControl = null;
+let mapLegendElement = null;
 const MEXICO_BOUNDS = L.latLngBounds([14.0, -118.0], [33.5, -86.0]);
 const GRATICULE_PADDING_DEGREES = 10;
 const GRATICULE_BOUNDS = L.latLngBounds(
@@ -1296,6 +1552,209 @@ const DEFAULT_MAP_ZOOM = 5.2;
 const MAPTILER_KEY = 'xRR3xCujdkUjxkDqlNTG';
 const MAPTILER_STYLE_SENER_LIGHT = '0198a9af-dc7c-79d3-8316-a80767ad1d0f';
 
+
+
+function getSupabaseRuntimeConfig() {
+    const config = window.AuthService?.getConfig?.();
+    return config?.url && config?.anonKey ? config : null;
+}
+
+function getSupabaseAccessToken() {
+    return window.AuthService?.readSession?.()?.access_token || '';
+}
+
+async function supabaseRestRequest(path) {
+    const config = getSupabaseRuntimeConfig();
+    const accessToken = getSupabaseAccessToken();
+    if (!config) {
+        throw new Error('No hay configuración válida de Supabase.');
+    }
+
+    const headers = {
+        apikey: config.anonKey
+    };
+
+    if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(`${config.url}/rest/v1/${path}`, { headers });
+
+    if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        const authHint = !accessToken ? ' Sin sesión activa, la lectura depende de las políticas públicas de Supabase.' : '';
+        throw new Error((payload?.message || payload?.hint || `Error ${response.status} al consultar Supabase.`) + authHint);
+    }
+
+    return response.json();
+}
+
+function numberOrNull(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeBarrenoFromSupabase(row) {
+    const intervalos = Array.isArray(row.barreno_intervalos)
+        ? row.barreno_intervalos
+            .slice()
+            .sort((a, b) => Number(a.orden || 0) - Number(b.orden || 0))
+            .map(intervalo => ({
+                intervalo_id: intervalo.intervalo_id,
+                orden: Number(intervalo.orden || 0),
+                desde: numberOrNull(intervalo.desde),
+                hasta: numberOrNull(intervalo.hasta)
+            }))
+        : [];
+
+    return {
+        id: row.id,
+        proyecto: row.proyecto || '',
+        subregion_sigla: row.subregion_sigla || '',
+        perforista: row.perforista || '',
+        responsable: row.responsable || '',
+        estado: row.estado || '',
+        municipio: row.municipio || '',
+        localidad: row.localidad || '',
+        latitud: numberOrNull(row.latitud),
+        longitud: numberOrNull(row.longitud),
+        altitud: numberOrNull(row.altitud),
+        azimut: numberOrNull(row.azimut),
+        inclinacion: numberOrNull(row.inclinacion),
+        tipo_barrenacion: row.tipo_barrenacion || '',
+        fecha_inicio: row.fecha_inicio || '',
+        fecha_fin: row.fecha_fin || '',
+        longitud_perforada: numberOrNull(row.longitud_perforada),
+        longitud_recuperada: numberOrNull(row.longitud_recuperada),
+        diametro_mm: numberOrNull(row.diametro_mm),
+        numero_cajas: numberOrNull(row.numero_cajas),
+        nombre_cajas: row.nombre_cajas || '',
+        rqd: row.rqd || '',
+        tcr: numberOrNull(row.tcr),
+        litologia_local: row.litologia_local || row.descripcion_local || '',
+        anomalia_gravimetrica: numberOrNull(row.anomalia_gravimetrica),
+        accesibilidad: row.accesibilidad || '',
+        observaciones: row.observaciones || '',
+        intervalos
+    };
+}
+
+function normalizeFuenteMuestra(value) {
+    const source = String(value || '').trim().toLowerCase();
+    if (source.includes('salmuera')) return 'Salmueras';
+    if (source.includes('arcilla')) return 'Arcillas';
+    return value || 'Arcillas';
+}
+
+function normalizeOrigenMuestra(value, fuente, referenciaBarrenoId) {
+    const origin = String(value || '').trim().toLowerCase();
+    if (fuente === 'Salmueras') return 'Salmuera';
+    if (origin.includes('nucleo') || origin.includes('núcleo') || referenciaBarrenoId) return 'Profundidad (Nucleo)';
+    return 'Superficie';
+}
+
+function normalizeMuestraFromSupabase(row, barrenosIndex) {
+    const referenciaBarrenoId = row.referencia_barreno_id || row.arcilla_barreno_id || null;
+    const referenciaIntervaloId = row.referencia_intervalo_id || row.arcilla_intervalo_id || null;
+    const barreno = referenciaBarrenoId ? barrenosIndex.get(referenciaBarrenoId) : null;
+    const fuente = normalizeFuenteMuestra(row.fuente);
+    const latitud = numberOrNull(row.arcilla_latitud) ?? numberOrNull(row.salmuera_latitud) ?? barreno?.latitud ?? null;
+    const longitud = numberOrNull(row.arcilla_longitud) ?? numberOrNull(row.salmuera_longitud) ?? barreno?.longitud ?? null;
+    if (!Number.isFinite(latitud) || !Number.isFinite(longitud)) {
+        return null;
+    }
+
+    const origen = normalizeOrigenMuestra(row.origen_arcilla, fuente, referenciaBarrenoId);
+    return {
+        id_muestra: row.id_muestra,
+        estado: row.estado || barreno?.estado || '',
+        municipio: row.municipio || barreno?.municipio || '',
+        latitud,
+        longitud,
+        fuente,
+        origen_arcilla: origen,
+        litologia: row.litologia || 'Sin litología',
+        color: row.color || 'Sin color',
+        textura: row.textura || 'Sin textura',
+        responsable: row.responsable || row.capturista_nombre || 'Usuario SIIL',
+        notas: row.arcilla_notas || row.notas || '',
+        referencia_barreno_id: referenciaBarrenoId,
+        referencia_intervalo_id: referenciaIntervaloId,
+        salmuera_campo: row.salmuera_campo || '',
+        salmuera_pozo: row.salmuera_pozo || '',
+        salmuera_profundidad: numberOrNull(row.salmuera_profundidad),
+        arcilla_altitud: numberOrNull(row.arcilla_altitud) ?? numberOrNull(row.salmuera_altitud) ?? barreno?.altitud ?? null,
+        arcilla_desde: numberOrNull(row.arcilla_desde),
+        arcilla_hasta: numberOrNull(row.arcilla_hasta),
+        arcilla_estructuras: row.arcilla_estructuras || null
+    };
+}
+
+function populateStateFilterOptions() {
+    const barrenoSelect = document.getElementById('filter-estado-barreno');
+    const muestraSelect = document.getElementById('filter-estado-muestra');
+    const barrenoEstados = [...new Set(barrenosData.map(item => item.estado).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es-MX'));
+    const muestraEstados = [...new Set(muestrasData.map(item => item.estado).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es-MX'));
+    if (barrenoSelect) {
+        barrenoSelect.innerHTML = '<option value="">Estado de barrenos</option>' + barrenoEstados.map(estado => `<option value="${estado}">${estado}</option>`).join('');
+    }
+    if (muestraSelect) {
+        muestraSelect.innerHTML = '<option value="">Estado de muestras</option>' + muestraEstados.map(estado => `<option value="${estado}">${estado}</option>`).join('');
+    }
+}
+
+async function hydrateMapDataFromSupabase() {
+    const barrenosRows = await supabaseRestRequest('barrenos?select=id,proyecto,subregion_sigla,perforista,responsable,estado,municipio,localidad,latitud,longitud,altitud,azimut,inclinacion,tipo_barrenacion,fecha_inicio,fecha_fin,longitud_perforada,longitud_recuperada,diametro_mm,numero_cajas,nombre_cajas,rqd,tcr,litologia_local,descripcion_local,anomalia_gravimetrica,accesibilidad,observaciones,barreno_intervalos(intervalo_id,desde,hasta,orden)&order=created_at.desc');
+    const nextBarrenos = Array.isArray(barrenosRows) ? barrenosRows.map(normalizeBarrenoFromSupabase).filter(item => Number.isFinite(item.latitud) && Number.isFinite(item.longitud)) : [];
+    const barrenosIndex = new Map(nextBarrenos.map(item => [item.id, item]));
+
+    let nextMuestras = [];
+    let source = 'supabase';
+
+    try {
+        const muestrasRows = await supabaseRestRequest('muestras?select=id_muestra,estado,municipio,fuente,origen_arcilla,litologia,color,textura,responsable,capturista_nombre,notas,arcilla_notas,arcilla_latitud,arcilla_longitud,arcilla_altitud,arcilla_desde,arcilla_hasta,arcilla_estructuras,salmuera_campo,salmuera_pozo,salmuera_latitud,salmuera_longitud,salmuera_altitud,salmuera_profundidad,referencia_barreno_id,referencia_intervalo_id&order=created_at.desc');
+        nextMuestras = Array.isArray(muestrasRows)
+            ? muestrasRows
+                .map(row => normalizeMuestraFromSupabase(row, barrenosIndex))
+                .filter(Boolean)
+            : [];
+    } catch (muestrasError) {
+        console.warn('No se pudieron cargar las muestras desde Supabase.', muestrasError);
+        source = `supabase parcial: ${muestrasError?.message || 'muestras no disponibles'}`;
+    }
+
+    barrenosData = nextBarrenos;
+    muestrasData = nextMuestras;
+
+    filteredBarrenos = [...barrenosData];
+    filteredMuestras = [...muestrasData];
+    populateStateFilterOptions();
+
+    return {
+        barrenos: barrenosData.length,
+        muestras: muestrasData.length,
+        source
+    };
+}
+
+async function initializeMapData() {
+    populateStateFilterOptions();
+    try {
+        return await hydrateMapDataFromSupabase();
+    } catch (error) {
+        console.warn('No se pudo hidratar el mapa desde Supabase. Se mantiene el demo local.', error);
+        barrenosData = [...DEMO_BARRENOS];
+        muestrasData = [...DEMO_MUESTRAS];
+        filteredBarrenos = [...barrenosData];
+        filteredMuestras = [...muestrasData];
+        populateStateFilterOptions();
+        return {
+            barrenos: barrenosData.length,
+            muestras: muestrasData.length,
+            source: `demo: ${error?.message || 'sin detalle'}`
+        };
+    }
+}
 
 const MAP_REFERENCE_URLS = {
     mexicoOutline: 'https://cdn.sassoapps.com/Mapas/mexico.geojson',
@@ -1508,10 +1967,90 @@ function updateMapLogoVisibility() {
     if (litioLogo) litioLogo.style.display = map?.hasLayer(mapContextLayers.litioLogo) ? '' : 'none';
 }
 
-function toggleExportMenu() {
-    const menu = document.getElementById('map-export-menu');
-    if (!menu) return;
-    menu.hidden = !menu.hidden;
+function toggleFiltersPanel(forceState) {
+    const panel = document.querySelector('.side-panel');
+    const button = document.getElementById('btn-toggle-filters');
+    if (!panel) return;
+    const shouldCollapse = typeof forceState === 'boolean' ? forceState : !panel.classList.contains('is-collapsed');
+    panel.classList.toggle('is-collapsed', shouldCollapse);
+    button?.classList.toggle('is-active', !shouldCollapse);
+    button?.setAttribute('aria-pressed', String(!shouldCollapse));
+    if (map) {
+        setTimeout(() => map.invalidateSize(), 220);
+    }
+    updateActionMenuLabels();
+}
+
+function toggleLegendPanel(forceState) {
+    const button = document.getElementById('btn-toggle-legend');
+    if (!mapLegendElement) return;
+    const shouldCollapse = typeof forceState === 'boolean' ? forceState : !mapLegendElement.classList.contains('is-collapsed');
+    mapLegendElement.classList.toggle('is-collapsed', shouldCollapse);
+    button?.classList.toggle('is-active', !shouldCollapse);
+    button?.setAttribute('aria-pressed', String(!shouldCollapse));
+    updateActionMenuLabels();
+}
+
+function toggleBottomNav(forceState) {
+    const nav = document.querySelector('.site-bottom-nav');
+    const button = document.getElementById('btn-toggle-nav');
+    if (!nav) return;
+    const shouldCollapse = typeof forceState === 'boolean'
+        ? forceState
+        : !document.body.classList.contains('map-nav-collapsed');
+    document.body.classList.toggle('map-nav-collapsed', shouldCollapse);
+    button?.classList.toggle('is-active', !shouldCollapse);
+    button?.setAttribute('aria-pressed', String(!shouldCollapse));
+    syncFullscreenLayout();
+    if (map) {
+        setTimeout(() => map.invalidateSize(), 220);
+    }
+    updateActionMenuLabels();
+}
+function syncResponsivePanels() {
+    updateActionMenuLabels();
+}
+
+function updateActionMenuLabels() {
+    const filtersPanel = document.querySelector('.side-panel');
+    const legendVisible = !!mapLegendElement && !mapLegendElement.classList.contains('is-collapsed');
+    const navVisible = !document.body.classList.contains('map-nav-collapsed');
+    const filtersLabel = document.querySelector('#btn-menu-filters span');
+    const legendLabel = document.querySelector('#btn-menu-legend span');
+    const navLabel = document.querySelector('#btn-menu-nav span');
+    if (filtersLabel && filtersPanel) {
+        filtersLabel.textContent = filtersPanel.classList.contains('is-collapsed') ? 'Mostrar filtros' : 'Ocultar filtros';
+    }
+    if (legendLabel) {
+        legendLabel.textContent = legendVisible ? 'Mostrar simbología' : 'Ocultar simbología';
+    }
+    if (navLabel) {
+        navLabel.textContent = navVisible ? 'Ocultar navegación' : 'Mostrar navegación';
+    }
+}
+function closeActionMenu() {
+    const menu = document.getElementById('map-action-menu');
+    const button = document.getElementById('btn-toggle-toolbar-menu');
+    if (!menu || !button) return;
+    menu.hidden = true;
+    menu.classList.remove('is-open');
+    button.classList.remove('is-active');
+    button.setAttribute('aria-expanded', 'false');
+}
+
+function toggleActionMenu() {
+    const menu = document.getElementById('map-action-menu');
+    const button = document.getElementById('btn-toggle-toolbar-menu');
+    if (!menu || !button) return;
+    const isOpen = !menu.hidden && menu.classList.contains('is-open');
+    if (isOpen) {
+        closeActionMenu();
+        return;
+    }
+    menu.hidden = false;
+    menu.classList.add('is-open');
+    button.classList.add('is-active');
+    button.setAttribute('aria-expanded', 'true');
 }
 
 async function exportMapToPNG() {
@@ -1531,22 +2070,32 @@ async function exportMapToPNG() {
     link.download = `sener-mapa-arcillas-${new Date().toISOString().slice(0, 10)}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
-    document.getElementById('map-export-menu').hidden = true;
+    document.getElementById('map-action-menu').hidden = true;
+    document.getElementById('btn-toggle-toolbar-menu')?.classList.remove('is-active');
+    document.getElementById('btn-toggle-toolbar-menu')?.setAttribute('aria-expanded', 'false');
     showNotif('PNG descargado correctamente.');
 }
 
 function setupMapToolbar() {
-    document.getElementById('btn-reset-view')?.addEventListener('click', () => {
+    document.getElementById('btn-menu-reset-view')?.addEventListener('click', () => {
         map.fitBounds(MEXICO_BOUNDS, { padding: [24, 24], animate: true });
+        closeActionMenu();
     });
-    document.getElementById('btn-toggle-export')?.addEventListener('click', toggleExportMenu);
+    document.getElementById('btn-toggle-toolbar-menu')?.addEventListener('click', toggleActionMenu);
+    document.getElementById('btn-menu-filters')?.addEventListener('click', () => { toggleFiltersPanel(); closeActionMenu(); });
+    document.getElementById('btn-menu-legend')?.addEventListener('click', () => { toggleLegendPanel(); closeActionMenu(); });
+    document.getElementById('btn-menu-nav')?.addEventListener('click', () => { toggleBottomNav(); closeActionMenu(); });
     document.getElementById('btn-export-png')?.addEventListener('click', exportMapToPNG);
+    toggleFiltersPanel(true);
+    toggleLegendPanel(true);
+    toggleBottomNav(true);
+    syncResponsivePanels();
     document.addEventListener('click', (event) => {
-        const menu = document.getElementById('map-export-menu');
-        const button = document.getElementById('btn-toggle-export');
+        const menu = document.getElementById('map-action-menu');
+        const button = document.getElementById('btn-toggle-toolbar-menu');
         if (!menu || menu.hidden) return;
         if (menu.contains(event.target) || button?.contains(event.target)) return;
-        menu.hidden = true;
+        closeActionMenu();
     });
 }
 
@@ -1681,11 +2230,27 @@ function iconNucleo() {
     });
 }
 
+function iconSalmuera() {
+    return L.divIcon({
+        className: '',
+        html: `<div class="siil-surface-icon" style="background: radial-gradient(circle at 35% 30%, #60a5fa, #2563EB);">
+            <span class="siil-icon-glyph">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="white">
+                    <path d="M12 2C9 6 6 9 6 13a6 6 0 0 0 12 0c0-4-3-7-6-11z"></path>
+                </svg>
+            </span>
+        </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -15]
+    });
+}
+
 /* ══════════════════════════════════════════════════════
    POPUPS
 ══════════════════════════════════════════════════════ */
 function popupBarreno(b) {
-    const mCount = DEMO_MUESTRAS.filter(m => m.referencia_barreno_id === b.id).length;
+    const mCount = muestrasData.filter(m => m.referencia_barreno_id === b.id).length;
     const tcrPct = b.tcr ? (b.tcr * 100).toFixed(1) + '%' : 'N/D';
     return `
     <div class="siil-popup-card siil-popup-card--barreno">
@@ -1714,16 +2279,16 @@ function popupBarreno(b) {
 }
 
 function popupMuestra(m) {
-    const esSuperficie = m.origen_arcilla === 'Superficie';
-    const tipoLabel = esSuperficie ? 'Superficie' : 'Núcleo';
-    const tipoClass = esSuperficie ? 'superficie' : 'nucleo';
+    const esSuperficie = m.origen_arcilla !== 'Profundidad (Nucleo)';
+    const tipoLabel = m.fuente === 'Salmueras' ? 'Salmuera' : (esSuperficie ? 'Superficie' : 'Asociada a barreno');
+    const tipoClass = m.fuente === 'Salmueras' ? 'salmuera' : (esSuperficie ? 'superficie' : 'nucleo');
     const profInfo = m.arcilla_desde != null
         ? `<div class="siil-popup-note siil-popup-note--muestra"><strong>Profundidad:</strong> ${m.arcilla_desde} – ${m.arcilla_hasta} m${m.arcilla_estructuras ? '<br><strong>Estructuras:</strong> ' + m.arcilla_estructuras : ''}</div>`
         : '';
     return `
     <div class="siil-popup-card siil-popup-card--muestra">
         <div class="siil-popup-head siil-popup-head--${tipoClass}">
-            <div class="siil-popup-kicker">Muestra de arcilla</div>
+            <div class="siil-popup-kicker">${m.fuente === 'Salmueras' ? 'Muestra de salmuera' : 'Muestra de arcilla'}</div>
             <div class="siil-popup-title">${m.id_muestra}</div>
             <div class="siil-popup-sub">${m.municipio}, ${m.estado}</div>
         </div>
@@ -1757,58 +2322,63 @@ function popField(label, value) {
    RENDERIZAR MARCADORES
 ══════════════════════════════════════════════════════ */
 function renderMap() {
-    // Limpiar capas anteriores
-    if (layerBarrenos) map.removeLayer(layerBarrenos);
-    if (layerSup) map.removeLayer(layerSup);
-    if (layerNuc) map.removeLayer(layerNuc);
+    if (layerOperational) {
+        map.removeLayer(layerOperational);
+    }
 
-    // Crear grupos con clustering
-    layerBarrenos = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: 9 });
-    layerSup      = L.markerClusterGroup({ maxClusterRadius: 30, disableClusteringAtZoom: 10 });
-    layerNuc      = L.markerClusterGroup({ maxClusterRadius: 30, disableClusteringAtZoom: 10 });
-
-    // Barrenos
-    filteredBarrenos.forEach(b => {
-        const marker = L.marker([b.latitud, b.longitud], { icon: iconBarreno(b.id) });
-        marker.bindPopup(popupBarreno(b), { maxWidth: 300, className: 'siil-popup' });
-        layerBarrenos.addLayer(marker);
+    layerOperational = L.markerClusterGroup({
+        maxClusterRadius: 38,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        spiderLegPolylineOptions: { color: '#6b7280', weight: 1.5, opacity: 0.7 }
     });
 
-    // Muestras superficie
+    filteredBarrenos.forEach(b => {
+        if (!layerVisible.barrenos) return;
+        const marker = L.marker([b.latitud, b.longitud], { icon: iconBarreno(b.id) });
+        marker.bindPopup(popupBarreno(b), { maxWidth: 300, className: 'siil-popup' });
+        layerOperational.addLayer(marker);
+    });
+
     filteredMuestras
-        .filter(m => m.origen_arcilla === 'Superficie')
+        .filter(m => m.fuente !== 'Salmueras' && m.origen_arcilla === 'Superficie')
         .forEach(m => {
-            const lat = m.arcilla_latitud || m.latitud;
-            const lng = m.arcilla_longitud || m.longitud;
-            const marker = L.marker([lat, lng], { icon: iconSuperficie() });
+            if (!layerVisible.superficie) return;
+            const marker = L.marker([m.latitud, m.longitud], { icon: iconSuperficie() });
             marker.bindPopup(popupMuestra(m), { maxWidth: 290, className: 'siil-popup' });
-            layerSup.addLayer(marker);
+            layerOperational.addLayer(marker);
         });
 
-    // Muestras núcleo
     filteredMuestras
-        .filter(m => m.origen_arcilla === 'Profundidad (Nucleo)')
+        .filter(m => m.fuente !== 'Salmueras' && m.origen_arcilla === 'Profundidad (Nucleo)')
         .forEach(m => {
-            const lat = m.latitud + (Math.random() * 0.004 - 0.002); // small offset to avoid overlap
-            const lng = m.longitud + (Math.random() * 0.004 - 0.002);
-            const marker = L.marker([lat, lng], { icon: iconNucleo() });
+            if (!layerVisible.nucleo) return;
+            const marker = L.marker([m.latitud, m.longitud], { icon: iconNucleo() });
             marker.bindPopup(popupMuestra(m), { maxWidth: 290, className: 'siil-popup' });
-            layerNuc.addLayer(marker);
+            layerOperational.addLayer(marker);
         });
 
-    // Agregar al mapa según visibilidad
-    if (layerVisible.barrenos) map.addLayer(layerBarrenos);
-    if (layerVisible.superficie) map.addLayer(layerSup);
-    if (layerVisible.nucleo) map.addLayer(layerNuc);
+    filteredMuestras
+        .filter(m => m.fuente === 'Salmueras')
+        .forEach(m => {
+            if (!layerVisible.salmuera) return;
+            const marker = L.marker([m.latitud, m.longitud], { icon: iconSalmuera() });
+            marker.bindPopup(popupMuestra(m), { maxWidth: 290, className: 'siil-popup' });
+            layerOperational.addLayer(marker);
+        });
+
+    map.addLayer(layerOperational);
 }
 
 /* ══════════════════════════════════════════════════════
    LEYENDA
 ══════════════════════════════════════════════════════ */
 function buildLegend() {
-    const legend = L.control({ position: 'bottomleft' });
-    legend.onAdd = function() {
+    mapLegendControl = L.control({ position: 'bottomleft' });
+    mapLegendControl.onAdd = function() {
         const div = L.DomUtil.create('div', 'siil-map-legend');
+        mapLegendElement = div;
         div.innerHTML = `
             <div class="siil-map-legend__title">Simbología activa</div>
             <div class="siil-map-legend__item">
@@ -1821,23 +2391,28 @@ function buildLegend() {
             </div>
             <div class="siil-map-legend__item">
                 <span class="siil-map-legend__swatch siil-map-legend__swatch--nucleo"></span>
-                <span>Arcilla de núcleo</span>
+                <span>Arcilla asociada a barreno</span>
+            </div>
+            <div class="siil-map-legend__item">
+                <span class="siil-map-legend__swatch siil-map-legend__swatch--salmuera"></span>
+                <span>Salmueras</span>
             </div>`;
         return div;
     };
-    legend.addTo(map);
+    mapLegendControl.addTo(map);
 }
 
 /* ══════════════════════════════════════════════════════
    FILTROS
 ══════════════════════════════════════════════════════ */
 function applyFilters() {
-    activeFilters.estado = document.getElementById('filter-estado').value;
+    activeFilters.estadoBarreno = document.getElementById('filter-estado-barreno').value;
+    activeFilters.estadoMuestra = document.getElementById('filter-estado-muestra').value;
     activeFilters.fuente = document.getElementById('filter-fuente').value;
     activeFilters.search = document.getElementById('filter-search').value.toLowerCase().trim();
 
-    filteredBarrenos = DEMO_BARRENOS.filter(b => {
-        if (activeFilters.estado && b.estado !== activeFilters.estado) return false;
+    filteredBarrenos = barrenosData.filter(b => {
+        if (activeFilters.estadoBarreno && b.estado !== activeFilters.estadoBarreno) return false;
         if (activeFilters.fuente && activeFilters.fuente !== 'Barreno') return false;
         if (activeFilters.search && !b.id.toLowerCase().includes(activeFilters.search)
             && !b.proyecto.toLowerCase().includes(activeFilters.search)
@@ -1846,14 +2421,15 @@ function applyFilters() {
         return true;
     });
 
-    filteredMuestras = DEMO_MUESTRAS.filter(m => {
-        if (activeFilters.estado && m.estado !== activeFilters.estado) return false;
+    filteredMuestras = muestrasData.filter(m => {
+        if (activeFilters.estadoMuestra && m.estado !== activeFilters.estadoMuestra) return false;
         if (activeFilters.fuente === 'Barreno') return false;
-        if (activeFilters.fuente === 'Superficie' && m.origen_arcilla !== 'Superficie') return false;
-        if (activeFilters.fuente === 'Nucleo' && m.origen_arcilla !== 'Profundidad (Nucleo)') return false;
+        if (activeFilters.fuente === 'Superficie' && !(m.fuente !== 'Salmueras' && m.origen_arcilla === 'Superficie')) return false;
+        if (activeFilters.fuente === 'Nucleo' && !(m.fuente !== 'Salmueras' && m.origen_arcilla === 'Profundidad (Nucleo)')) return false;
+        if (activeFilters.fuente === 'Salmueras' && m.fuente !== 'Salmueras') return false;
         if (activeFilters.search && !m.id_muestra.toLowerCase().includes(activeFilters.search)
             && !m.estado.toLowerCase().includes(activeFilters.search)
-            && !m.litologia.toLowerCase().includes(activeFilters.search)) return false;
+            && !(m.litologia || '').toLowerCase().includes(activeFilters.search)) return false;
         return true;
     });
 
@@ -1865,12 +2441,13 @@ function applyFilters() {
 }
 
 function resetFilters() {
-    document.getElementById('filter-estado').value = '';
+    document.getElementById('filter-estado-barreno').value = '';
+    document.getElementById('filter-estado-muestra').value = '';
     document.getElementById('filter-fuente').value = '';
     document.getElementById('filter-search').value = '';
-    activeFilters = { estado: '', fuente: '', search: '' };
-    filteredBarrenos = [...DEMO_BARRENOS];
-    filteredMuestras = [...DEMO_MUESTRAS];
+    activeFilters = { estadoBarreno: '', estadoMuestra: '', fuente: '', search: '' };
+    filteredBarrenos = [...barrenosData];
+    filteredMuestras = [...muestrasData];
     renderMap();
     updateKPIs();
     renderBarrenoList();
@@ -1882,28 +2459,23 @@ function resetFilters() {
 ══════════════════════════════════════════════════════ */
 function toggleChip(el, layer) {
     layerVisible[layer] = !layerVisible[layer];
-    const layerMap = { barrenos: layerBarrenos, superficie: layerSup, nucleo: layerNuc };
     const classMap = {
         barrenos: 'active-barreno',
         superficie: 'active-superficie',
-        nucleo: 'active-nucleo'
+        nucleo: 'active-nucleo',
+        salmuera: 'active-salmuera'
     };
 
-    if (layerVisible[layer]) {
-        map.addLayer(layerMap[layer]);
-        el.className = `chip ${classMap[layer]}`;
-    } else {
-        map.removeLayer(layerMap[layer]);
-        el.className = 'chip inactive';
-    }
+    el.className = layerVisible[layer] ? `chip ${classMap[layer]}` : 'chip inactive';
+    renderMap();
 }
 
 /* ══════════════════════════════════════════════════════
    ACTUALIZAR KPIs
 ══════════════════════════════════════════════════════ */
 function updateKPIs() {
-    const sup = filteredMuestras.filter(m => m.origen_arcilla === 'Superficie').length;
-    const nuc = filteredMuestras.filter(m => m.origen_arcilla === 'Profundidad (Nucleo)').length;
+    const sup = filteredMuestras.filter(m => m.fuente !== 'Salmueras' && m.origen_arcilla === 'Superficie').length;
+    const nuc = filteredMuestras.filter(m => m.fuente === 'Salmueras').length;
     animNum('kpi-barrenos', filteredBarrenos.length);
     animNum('kpi-total', filteredMuestras.length);
     animNum('kpi-sup', sup);
@@ -1960,13 +2532,16 @@ Chart.defaults.color = '#6B7280';
 function buildCharts() {
     // Chart 1 — Donut tipos
     const ctxTipo = document.getElementById('chartTipo').getContext('2d');
+    const supCount = filteredMuestras.filter(m => m.fuente !== 'Salmueras' && m.origen_arcilla === 'Superficie').length;
+    const nucCount = filteredMuestras.filter(m => m.fuente !== 'Salmueras' && m.origen_arcilla === 'Profundidad (Nucleo)').length;
+    const salCount = filteredMuestras.filter(m => m.fuente === 'Salmueras').length;
     chartTipo = new Chart(ctxTipo, {
         type: 'doughnut',
         data: {
-            labels: ['Arc. Superficie', 'Arc. Núcleo'],
+            labels: ['Arc. Superficie', 'Arc. asociada a barreno', 'Salmueras'],
             datasets: [{
-                data: [8, 10],
-                backgroundColor: ['#A57F2C', '#9B2247'],
+                data: [supCount, nucCount, salCount],
+                backgroundColor: ['#A57F2C', '#9B2247', '#2563EB'],
                 borderColor: '#ffffff',
                 borderWidth: 3,
                 hoverOffset: 4
@@ -2009,11 +2584,11 @@ function buildCharts() {
     chartTCR = new Chart(ctxTCR, {
         type: 'bar',
         data: {
-            labels: DEMO_BARRENOS.map(b => b.id.replace('SEFMP31-', '')),
+            labels: filteredBarrenos.map(b => b.id.replace('SEFMP31-', '')),
             datasets: [{
                 label: 'TCR',
-                data: DEMO_BARRENOS.map(b => (b.tcr * 100).toFixed(1)),
-                backgroundColor: DEMO_BARRENOS.map(b =>
+                data: filteredBarrenos.map(b => ((b.tcr || 0) * 100).toFixed(1)),
+                backgroundColor: filteredBarrenos.map(b =>
                     b.tcr >= 0.9 ? '#10B981' : b.tcr >= 0.8 ? '#F59E0B' : '#EF4444'
                 ),
                 borderRadius: 4
@@ -2044,16 +2619,24 @@ function getLitoData() {
 }
 
 function updateCharts() {
-    if (!chartTipo || !chartLito) return;
-    const sup = filteredMuestras.filter(m => m.origen_arcilla === 'Superficie').length;
-    const nuc = filteredMuestras.filter(m => m.origen_arcilla === 'Profundidad (Nucleo)').length;
-    chartTipo.data.datasets[0].data = [sup, nuc];
+    if (!chartTipo || !chartLito || !chartTCR) return;
+    const sup = filteredMuestras.filter(m => m.fuente !== 'Salmueras' && m.origen_arcilla === 'Superficie').length;
+    const nuc = filteredMuestras.filter(m => m.fuente !== 'Salmueras' && m.origen_arcilla === 'Profundidad (Nucleo)').length;
+    const sal = filteredMuestras.filter(m => m.fuente === 'Salmueras').length;
+    chartTipo.data.datasets[0].data = [sup, nuc, sal];
     chartTipo.update();
 
     const litoData = getLitoData();
     chartLito.data.labels = litoData.labels;
     chartLito.data.datasets[0].data = litoData.values;
     chartLito.update();
+
+    chartTCR.data.labels = filteredBarrenos.map(b => b.id.replace('SEFMP31-', ''));
+    chartTCR.data.datasets[0].data = filteredBarrenos.map(b => ((b.tcr || 0) * 100).toFixed(1));
+    chartTCR.data.datasets[0].backgroundColor = filteredBarrenos.map(b =>
+        (b.tcr || 0) >= 0.9 ? '#10B981' : (b.tcr || 0) >= 0.8 ? '#F59E0B' : '#EF4444'
+    );
+    chartTCR.update();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -2061,10 +2644,10 @@ function updateCharts() {
 ══════════════════════════════════════════════════════ */
 function openExpediente(id, type) {
     const panel = document.getElementById('expediente-panel');
-    const b = DEMO_BARRENOS.find(x => x.id === id);
+    const b = barrenosData.find(x => x.id === id);
     if (!b) return;
 
-    const muestrasAsoc = DEMO_MUESTRAS.filter(m => m.referencia_barreno_id === b.id);
+    const muestrasAsoc = muestrasData.filter(m => m.referencia_barreno_id === b.id);
 
     // Header
     document.getElementById('exp-title').textContent = b.id;
@@ -2184,7 +2767,7 @@ function openExpediente(id, type) {
                 <div style="margin-top:6px;font-size:9px;color:#6B7280;line-height:1.4;border-top:1px solid #E5E7EB;padding-top:5px">${m.notas}</div>
             </div>`).join('');
 
-    const supHtml = DEMO_MUESTRAS.filter(m =>
+    const supHtml = muestrasData.filter(m =>
         m.origen_arcilla === 'Superficie' && m.estado === b.estado && m.municipio === b.municipio
     );
     const supSection = supHtml.length > 0 ? `
@@ -2214,10 +2797,12 @@ function openExpediente(id, type) {
     // Activar tab inicial
     switchTab('datos');
     panel.classList.add('open');
+    document.body.classList.add('expediente-open');
 }
 
 function closeExpediente() {
     document.getElementById('expediente-panel').classList.remove('open');
+    document.body.classList.remove('expediente-open');
 }
 
 function switchTab(name) {
@@ -2260,22 +2845,93 @@ function showNotif(msg) {
 /* ══════════════════════════════════════════════════════
    ARRANQUE
 ══════════════════════════════════════════════════════ */
-window.addEventListener('load', () => {
-    initMap();
+window.addEventListener('load', async () => {
+    document.body.classList.add('map-fullscreen-mode');
+    syncFullscreenLayout();
+    const summary = await initializeMapData();
+    await initMap();
     buildCharts();
     updateKPIs();
     renderBarrenoList();
-    showNotif('7 barrenos · 18 muestras de arcillas cargadas');
+    showNotif(`${summary.barrenos} barrenos · ${summary.muestras} muestras cargadas (${summary.source})`);
 });
 
-window.addEventListener('resize', () => {
+function syncFullscreenLayout() {
+    const header = document.querySelector('.site-header');
+    const bottomNav = document.querySelector('.site-bottom-nav');
+    const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 84;
+    const navCollapsed = document.body.classList.contains('map-nav-collapsed');
+    const bottomNavHeight = !navCollapsed && bottomNav ? Math.ceil(bottomNav.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty('--site-header-offset', `${headerHeight}px`);
+    document.documentElement.style.setProperty('--site-bottom-nav-offset', `${bottomNavHeight}px`);
+    syncResponsivePanels();
     if (map) {
         setTimeout(() => map.invalidateSize(), 80);
     }
-});
+}
+
+window.addEventListener('resize', syncFullscreenLayout);
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
