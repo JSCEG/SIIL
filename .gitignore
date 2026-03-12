@@ -33,3 +33,29 @@ _tmp_*
 *.tmp
 *.temp
 
+# Local tooling and workspace state
+supabase/.temp/
+tmp/
+tmp-docx-*/
+*.bak
+*.backup
+*_backup.*
+
+# Local helper scripts and scratch files
+_tmp_*.py
+*.cache
+
+# Generated document/render artifacts
+~$*.docx
+
+# Optional local editors
+.history/
+
+
+# Local references and specs
+refrencias/
+.kiro/
+
+# SQL files
+*.sql
+
